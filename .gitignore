@@ -1,2 +1,2 @@
-statuses/
-exports/
+#ignoring all JSON files
+*.json
