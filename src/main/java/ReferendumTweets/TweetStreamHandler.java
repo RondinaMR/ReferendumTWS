@@ -3,13 +3,11 @@ import twitter4j.*;
 import twitter4j.conf.*;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.*;
@@ -653,4 +651,10 @@ public class TweetStreamHandler {
         }
     }
 
+    public void exportAllJSON(){
+        this.toJSONVotingIntentions();
+        this.toJSONVotingTrend();
+        this.toJSONpopularitySum();
+        this.toJSONpopVoting();
+    }
 }
