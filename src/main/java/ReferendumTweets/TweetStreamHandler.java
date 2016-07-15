@@ -421,7 +421,14 @@ public class TweetStreamHandler {
             Calendar c1 = Calendar.getInstance();
             Calendar c2 = Calendar.getInstance();
             c1.setTime(ds);
+            c1.set(Calendar.MINUTE,0);
+            c1.set(Calendar.SECOND,0);
+            c1.set(Calendar.MILLISECOND,0);
             c2.setTime(de);
+            c2.add(Calendar.HOUR_OF_DAY,1);
+            c2.set(Calendar.MINUTE,0);
+            c2.set(Calendar.SECOND,0);
+            c2.set(Calendar.MILLISECOND,0);
             startPeriod = c1.getTime();
 
             List<Status> tmpList = new LinkedList<>();
@@ -507,7 +514,13 @@ public class TweetStreamHandler {
             Calendar c1 = Calendar.getInstance();
             Calendar c2 = Calendar.getInstance();
             c1.setTime(ds);
+            c1.set(Calendar.MINUTE,0);
+            c1.set(Calendar.SECOND,0);
+            c1.set(Calendar.MILLISECOND,0);
             c2.setTime(de);
+            c2.set(Calendar.MINUTE,0);
+            c2.set(Calendar.SECOND,0);
+            c2.set(Calendar.MILLISECOND,0);
             startPeriod = c1.getTime();
 
             List<Status> tmpList = new LinkedList<>();
