@@ -255,7 +255,7 @@ public class TweetStreamHandler {
             //JSON from file to Object
             statistics = mapper.readValue(new File("exports/statistics.json"),  new TypeReference<LinkedList<Statistic>>(){});
             users = mapper.readValue(new File("exports/users.json"),  new TypeReference<Map<Long,TWUS>>(){});
-
+            clast.setTime(statistics.getLast().getDate());
             System.out.println("Loaded "+ getNumberOfTweets() + " tweets by " + users.size() + " users.");
         } catch (IOException e) {
             e.printStackTrace();
