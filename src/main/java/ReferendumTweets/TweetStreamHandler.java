@@ -82,6 +82,7 @@ public class TweetStreamHandler {
     }
 
     public void startStream(String... strings){
+
         queries = strings;
         StringBuilder sb = new StringBuilder();
         for(int i = 0; i<strings.length;i++){
@@ -133,6 +134,7 @@ public class TweetStreamHandler {
     }
 
     public void loadJSON(){
+        System.out.println("Starting loading data...");
         try {
             int n=0;
             File[] files = new File("statuses").listFiles((dir,name) -> name.endsWith(".json"));
@@ -140,10 +142,15 @@ public class TweetStreamHandler {
                 String rawJSON = readFirstLine(file);
                 Status tweet = TwitterObjectFactory.createStatus(rawJSON);
                 tweets.add(tweet);
-                System.out.println(n++);
+                n++;
+                if(n%1000==0){
+                    System.out.println(n);
+                }
+//                System.out.println(n++);
 //                System.out.println("@"+tweet.getUser().getId() + " - " + tweet.getText() + " (" + tweet.getCreatedAt()+")");
                 addUser(tweet);
             }
+            System.out.println("All data successfully loaded!");
         } catch (IOException ioe) {
             ioe.printStackTrace();
             System.out.println("Failed to store tweets: " + ioe.getMessage());
@@ -321,6 +328,7 @@ public class TweetStreamHandler {
             String filename = "exports/" + "votingIntentions.json";
             new File("exports").mkdir();
             storeJSON(jsondata.toString(),filename);
+            System.out.println("Successfully exported votingIntentions.json!");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -433,7 +441,7 @@ public class TweetStreamHandler {
             List<Status> oldList = new LinkedList<>();
             List<Status> thisList = new LinkedList<>();
             Status tmpS;
-            System.out.println("START");
+            System.out.println("Exporting votingTrend.json...");
             int xyz=0;
             StringBuilder jsondata = new StringBuilder("");
             jsondata.append("[");
@@ -441,10 +449,10 @@ public class TweetStreamHandler {
             while(c1.compareTo(c2)<= 0){
                 c1.add(Calendar.HOUR_OF_DAY,1);
                 endPeriod = c1.getTime();
-                System.out.println(sdf.format(endPeriod));
+//                System.out.println(sdf.format(endPeriod));
                 while(itr.hasNext() && ((tmpS = itr.next()).getCreatedAt().compareTo(endPeriod) < 0)){
                     tmpList.add(tmpS);
-                    System.out.println(xyz++);
+//                    System.out.println(xyz++);
                 }
                 thisList.addAll(tmpList);
                 tmpList.addAll(oldList);
@@ -457,7 +465,7 @@ public class TweetStreamHandler {
                 if(c1.compareTo(c2)<= 0){
                     jsondata.append(",");
                 }
-                System.out.println("<" + tmpList.size() + ">");
+//                System.out.println("<" + tmpList.size() + ">");
                 startPeriod = endPeriod;
                 oldList.addAll(thisList);
                 tmpList.clear();
@@ -468,6 +476,7 @@ public class TweetStreamHandler {
             String filename = "exports/" + "votingTrend.json";
             new File("exports").mkdir();
             storeJSON(jsondata.toString(),filename);
+            System.out.println("Successfully exported votingTrend.json!");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -524,15 +533,15 @@ public class TweetStreamHandler {
             List<Status> tmpList = new LinkedList<>();
 
             StringBuilder jsondata = new StringBuilder("").append("[");
-            System.out.println("START");
+            System.out.println("Exporting popularitySum.json...");
 
             while(c1.compareTo(c2)<= 0){
                 c1.add(Calendar.HOUR_OF_DAY,1);
                 endPeriod = c1.getTime();
-                System.out.println(sdf.format(endPeriod));
+//                System.out.println(sdf.format(endPeriod));
                 while(itr.hasNext() && ((tmpS = itr.next()).getCreatedAt().compareTo(endPeriod) < 0)){
                     tmpList.add(tmpS);
-                    System.out.println(xyz++);
+//                    System.out.println(xyz++);
                 }
 
                 jsondata.append("{\"date\":").append(startPeriod.getTime()).append(",");
@@ -541,7 +550,7 @@ public class TweetStreamHandler {
                     jsondata.append(",");
                 }
 
-                System.out.println("<" + tmpList.size() + ">");
+//                System.out.println("<" + tmpList.size() + ">");
                 startPeriod = endPeriod;
                 tmpList.clear();
             }
@@ -550,6 +559,7 @@ public class TweetStreamHandler {
             String filename = "exports/" + "popularitySum.json";
             new File("exports").mkdir();
             storeJSON(jsondata.toString(),filename);
+            System.out.println("Successfully exported popularitySum.json!");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -616,7 +626,7 @@ public class TweetStreamHandler {
             List<Status> tmpList = new LinkedList<>();
 
             StringBuilder jsondata = new StringBuilder("").append("[");
-
+            System.out.println("Exporting popularityVote.json...");
             while(c1.compareTo(c2)<= 0){
                 c1.add(Calendar.HOUR_OF_DAY,1);
                 endPeriod = c1.getTime();
@@ -625,7 +635,7 @@ public class TweetStreamHandler {
                 }
                 pl.add(new PopVoto(tmpList.size(),listToPerc(tmpList,true,1),listToPerc(tmpList,true,-1),listToPerc(tmpList,true,0)));
 
-                System.out.println("<" + tmpList.size() + ">");
+//                System.out.println("<" + tmpList.size() + ">");
 
                 tmpList.clear();
             }
@@ -646,6 +656,7 @@ public class TweetStreamHandler {
             String filename = "exports/" + "popularityVote.json";
             new File("exports").mkdir();
             storeJSON(jsondata.toString(),filename);
+            System.out.println("Successfully exported popularityVote.json!");
         } catch (IOException e) {
             e.printStackTrace();
         }

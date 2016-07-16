@@ -1,5 +1,5 @@
 #ignoring all JSON files
-*.json
+#*.json
 
 ### Intellij ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
@@ -58,4 +58,10 @@ fabric.properties
 statuses/
 target/generated-sources/
 target/generated-test-sources/
-/exports/
+exports/
+target/RTT-1.0-SNAPSHOT.jar
+target/RTT-1.0-SNAPSHOT.jar.original
+target/maven-archiver/
+target/site/
+target/surefire-reports/
+*.json
