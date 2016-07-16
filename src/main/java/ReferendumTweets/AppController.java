@@ -42,8 +42,9 @@ public class AppController {
     private void init(){
         try {
             tsh = new TweetStreamHandler();
-            tsh.loadJSON();
+//            tsh.loadJSON();
 //            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
+            tsh.loadStatistics();
             System.out.println("Starting TIMER");
             timer.schedule(hourlyTask, 0, 1000*60*60);
         } catch (FileNotFoundException e) {
@@ -57,39 +58,29 @@ public class AppController {
             System.out.println("Starting stream...");
             tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
             status = 1;
-            return new RestMessage(status,State.Running);
+            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Running);
         }else if(name.equalsIgnoreCase("stop") && status == 1){
             tsh.stopStream();
             System.out.println("Stream stopped.");
             status = 0;
-            return new RestMessage(status,State.Stopped);
+            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
         }else if(name.equalsIgnoreCase("status")){
             if(status==0){
-                return new RestMessage(status,State.Stopped);
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
             }else{
-                return new RestMessage(status,State.Running);
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Running);
             }
-        }else if(name.equalsIgnoreCase("tweets")){
-            if (status == 0) {
-                return new RestMessage(tsh.getNumberOfTweets(),State.Stopped);
-            }else if(status == 1){
-                return new RestMessage(tsh.getNumberOfTweets(),State.Running);
-            }else{
-                return new RestMessage(tsh.getNumberOfTweets(),State.Unknown);
-            }
-        }else if(name.equalsIgnoreCase("users")){
-            if (status == 0) {
-                return new RestMessage(tsh.getNumberOfUsers(),State.Stopped);
-            }else if(status == 1){
-                return new RestMessage(tsh.getNumberOfUsers(),State.Running);
-            }else{
-                return new RestMessage(tsh.getNumberOfUsers(),State.Unknown);
-            }
-        }else if(name.equalsIgnoreCase("reload") && status == 0){
+        }else if(name.equalsIgnoreCase("loadfiles") && status == 0){
             tsh.loadJSON();
-            return new RestMessage(status,State.Stopped);
+            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+        }else if(name.equalsIgnoreCase("loadstat") && status == 0){
+            tsh.loadStatistics();
+            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+        }else if(name.equalsIgnoreCase("savestat") && status == 0){
+            tsh.toJSONstatistics();
+            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
         }else{
-            return new RestMessage(status,State.Unknown);
+            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unknown);
         }
     }
 }

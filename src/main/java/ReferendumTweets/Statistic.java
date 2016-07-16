@@ -14,6 +14,10 @@ public class Statistic {
     private Long noUsers = (long) 0;
     private Long otherUsers = (long) 0;
 
+    public Statistic() {
+
+    }
+
     public Statistic(Date date, Long yes, Long no, Long other, Long yesUsers, Long noUsers, Long otherUsers) {
         this.date = date;
         this.yes = yes;
@@ -22,10 +26,6 @@ public class Statistic {
         this.yesUsers = yesUsers;
         this.noUsers = noUsers;
         this.otherUsers = otherUsers;
-    }
-
-    public Statistic() {
-
     }
 
     public Date getDate() {
@@ -84,7 +84,7 @@ public class Statistic {
         this.otherUsers = otherUsers;
     }
 
-    public Long getNumberOfTweets(){
+    public Long numberOfTweets(){
         return yes+no+other;
     }
 

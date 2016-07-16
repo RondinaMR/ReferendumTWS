@@ -1,4 +1,7 @@
 package ReferendumTweets;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import twitter4j.*;
 import twitter4j.conf.*;
 
@@ -188,7 +191,7 @@ public class TweetStreamHandler {
 
                 if(tweet.getCreatedAt().compareTo(c1.getTime()) > 0){
                     statistics.add(new Statistic(c1.getTime(),yes,no,other,getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
-                    System.out.println("Tweets: " + getNumberOfTweets());
+//                    System.out.println("Tweets: " + getNumberOfTweets());
                     yes = (long)0;
                     no = (long)0;
                     other = (long)0;
@@ -202,7 +205,9 @@ public class TweetStreamHandler {
                 }
 
             }
-            System.out.println("All data successfully loaded!");
+            System.out.println("All data successfully loaded...");
+            toJSONstatistics();
+            System.out.println("...and exported!");
         } catch (IOException ioe) {
             ioe.printStackTrace();
             System.out.println("Failed to store tweets: " + ioe.getMessage());
@@ -220,6 +225,41 @@ public class TweetStreamHandler {
                 .entrySet().stream()
                 .map(e -> e.getKey() + " : " + e.getValue())
                 .forEach(System.out::println);
+    }
+
+    public void toJSONstatistics(){
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            //statistics to JSON in String
+            String jsondata = mapper.writeValueAsString(statistics);
+            String filename = "exports/" + "statistics.json";
+            new File("exports").mkdir();
+            storeJSON(jsondata,filename);
+            //users to JSON in String
+            jsondata = mapper.writeValueAsString(users);
+            filename = "exports/" + "users.json";
+            new File("exports").mkdir();
+            storeJSON(jsondata,filename);
+            System.out.println("Successfully exported statistics and users in *.json!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadStatistics(){
+        try {
+            statistics.clear();
+            users.clear();
+            ObjectMapper mapper = new ObjectMapper();
+
+            //JSON from file to Object
+            statistics = mapper.readValue(new File("exports/statistics.json"),  new TypeReference<LinkedList<Statistic>>(){});
+            users = mapper.readValue(new File("exports/users.json"),  new TypeReference<Map<Long,TWUS>>(){});
+
+            System.out.println("Loaded "+ getNumberOfTweets() + " tweets by " + users.size() + " users.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public Long getNumberOfYesUsers(){
@@ -251,7 +291,7 @@ public class TweetStreamHandler {
 
     public Long getNumberOfTweets(){
         return statistics.stream()
-                .collect(summingLong(Statistic::getNumberOfTweets));
+                .collect(summingLong(Statistic::numberOfTweets));
     }
 
     private static String readFirstLine(File fileName) throws IOException {
@@ -529,7 +569,7 @@ public class TweetStreamHandler {
                     difOther = before.getOtherUsers();
                 }
 
-                pl.add(new PopVoto(last.getNumberOfTweets(),numToPerc(difYes,difNo,difOther,1),numToPerc(difYes,difNo,difOther,-1),numToPerc(difYes,difNo,difOther,0)));
+                pl.add(new PopVoto(last.numberOfTweets(),numToPerc(difYes,difNo,difOther,1),numToPerc(difYes,difNo,difOther,-1),numToPerc(difYes,difNo,difOther,0)));
                 before = last;
             }
             spl = pl.stream().sorted(comparing(PopVoto::getTot)).collect(toList());

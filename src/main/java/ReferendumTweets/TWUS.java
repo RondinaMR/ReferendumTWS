@@ -23,6 +23,9 @@ public class TWUS {
     private boolean ambiguous = false;
     private boolean positionSetted = false;
 
+    public TWUS() {
+    }
+
     public TWUS(long userID, String location) {
         this.userID = userID;
         this.location = location;
