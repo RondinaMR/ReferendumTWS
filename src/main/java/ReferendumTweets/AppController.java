@@ -36,12 +36,18 @@ public class AppController {
         }
     }
 
+    public AppController() {
+        init();
+        System.out.println("INIZIALIZZATO");
+    }
+
     @RequestMapping("/referendum")
-    public void controller(@RequestParam(value="cmd", defaultValue="World") String name) {
+    public void controller(@RequestParam(value="cmd", defaultValue="null") String name) {
         if(name.equalsIgnoreCase("start")){
             tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
         }else if(name.equalsIgnoreCase("stop")){
             tsh.stopStream();
+
         }
     }
 }
