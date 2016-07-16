@@ -4,23 +4,23 @@ package ReferendumTweets;
  * Created by Marco on 14/07/2016.
  */
 public class PopVoto {
-    private Integer tot;
+    private Long tot;
     private Double yes;
     private Double no;
     private Double other;
 
-    public PopVoto(Integer tot, Double yes, Double no, Double other) {
+    public PopVoto(Long tot, Double yes, Double no, Double other) {
         this.tot = tot;
         this.yes = yes;
         this.no = no;
         this.other = other;
     }
 
-    public Integer getTot() {
+    public Long getTot() {
         return tot;
     }
 
-    public void setTot(Integer tot) {
+    public void setTot(Long tot) {
         this.tot = tot;
     }
 

@@ -127,7 +127,7 @@ public class StreamGUI extends JFrame{
         exGeo.addActionListener((event) -> {
             if(event.getActionCommand().equals("Geo Voting")){
                 refresh.doClick();
-                tsh.toJSONGeoVote();
+//                tsh.toJSONGeoVote();
                 JOptionPane.showMessageDialog(null,"Geo Voting successfully exported!");
             }
         });

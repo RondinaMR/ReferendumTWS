@@ -16,6 +16,8 @@ import org.springframework.boot.autoconfigure.*;
 @EnableAutoConfiguration
 public class AppController {
 
+    public enum State { Stopped, Running, Unknown}
+
     public static void main(String[] args) throws Exception {
         SpringApplication.run(AppController.class, args);
     }
@@ -25,7 +27,7 @@ public class AppController {
         init();
         System.out.println("END INIT");
     }
-
+    private int status = 0;
     private TweetStreamHandler tsh;
     private Timer timer = new Timer();
     private TimerTask hourlyTask = new TimerTask() {
@@ -50,13 +52,33 @@ public class AppController {
     }
 
     @RequestMapping("/referendum")
-    public void controller(@RequestParam(value="cmd", defaultValue="null") String name) {
-        if(name.equalsIgnoreCase("start")){
+    public RestMessage controller(@RequestParam(value="cmd", defaultValue="null") String name) {
+        if(name.equalsIgnoreCase("start") && status == 0){
             System.out.println("Starting stream...");
             tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
-        }else if(name.equalsIgnoreCase("stop")){
+            status = 1;
+            return new RestMessage(status,State.Running);
+        }else if(name.equalsIgnoreCase("stop") && status == 1){
             tsh.stopStream();
             System.out.println("Stream stopped.");
+            status = 0;
+            return new RestMessage(status,State.Stopped);
+        }else if(name.equalsIgnoreCase("status")){
+            if(status==0){
+                return new RestMessage(status,State.Stopped);
+            }else{
+                return new RestMessage(status,State.Running);
+            }
+        }else if(name.equalsIgnoreCase("tweets")){
+            if (status == 0) {
+                return new RestMessage(tsh.getNumberOfTweets(),State.Stopped);
+            }else if(status == 1){
+                return new RestMessage(tsh.getNumberOfTweets(),State.Running);
+            }else{
+                return new RestMessage(tsh.getNumberOfTweets(),State.Unknown);
+            }
+        }else{
+            return new RestMessage(status,State.Unknown);
         }
     }
 }

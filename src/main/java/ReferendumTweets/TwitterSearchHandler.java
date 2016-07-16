@@ -52,47 +52,47 @@ public class TwitterSearchHandler {
         }
     }
 
-    public long cercoNO() throws TwitterException{
-        long count;
-        Query queryNO = new Query("#iovotono");
-        QueryResult resultNO;
-        do {
-            resultNO = twitter.search(queryNO);
-            tweetsNO = resultNO.getTweets();
-            for (Status tweet : tweetsNO) {
-                TWUS t = new TWUS(tweet.getUser().getId(),tweet.getUser().getScreenName(),tweet.getUser().getName(),tweet.getUser().getLocation(),false);
-                if(!users.containsKey(tweet.getUser().getId())) users.put(tweet.getUser().getId(), t);
-                TWUS user = users.get(tweet.getUser().getId());
-                if((user.isPoliticalPosition()) && (!user.isAmbiguous())) user.setAmbiguous();
-                user.addTweetToUser(tweet);
-                System.out.println("[NO] @"+tweet.getUser().getScreenName() + " - N:" + tweet.getUser().getName() + " - L: " + tweet.getUser().getLocation() + " - ID: " + tweet.getUser().getId());
-            }
-        } while ((queryNO = resultNO.nextQuery()) != null);
-        count = tweetsNO.size();
-        System.out.println("TOTAL NO: "+count);
-        return count;
-    }
-
-    public long cercoSI() throws TwitterException{
-        long count;
-        Query querySI = new Query("#bastaunsi");
-        QueryResult resultSI;
-        do {
-            resultSI = twitter.search(querySI);
-            tweetsSI = resultSI.getTweets();
-            for (Status tweet : tweetsSI) {
-                TWUS t = new TWUS(tweet.getUser().getId(),tweet.getUser().getScreenName(),tweet.getUser().getName(),tweet.getUser().getLocation(),false);
-                if(!users.containsKey(tweet.getUser().getId())) users.put(tweet.getUser().getId(), t);
-                TWUS user = users.get(tweet.getUser().getId());
-                if((!user.isPoliticalPosition()) && (!user.isAmbiguous())) user.setAmbiguous();
-                user.addTweetToUser(tweet);
-                System.out.println("[SI] @"+tweet.getUser().getScreenName() + " - N:" + tweet.getUser().getName() + " - L: " + tweet.getUser().getLocation() + " - ID: " + tweet.getUser().getId());
-            }
-        } while ((querySI = resultSI.nextQuery()) != null);
-        count = tweetsSI.size();
-        System.out.println("TOTAL NO: "+count);
-        return count;
-    }
+//    public long cercoNO() throws TwitterException{
+//        long count;
+//        Query queryNO = new Query("#iovotono");
+//        QueryResult resultNO;
+//        do {
+//            resultNO = twitter.search(queryNO);
+//            tweetsNO = resultNO.getTweets();
+//            for (Status tweet : tweetsNO) {
+//                TWUS t = new TWUS(tweet.getUser().getId(),tweet.getUser().getScreenName(),tweet.getUser().getName(),tweet.getUser().getLocation(),false);
+//                if(!users.containsKey(tweet.getUser().getId())) users.put(tweet.getUser().getId(), t);
+//                TWUS user = users.get(tweet.getUser().getId());
+//                if((user.isPoliticalPosition()) && (!user.isAmbiguous())) user.setAmbiguous();
+//                user.addTweetToUser(tweet);
+//                System.out.println("[NO] @"+tweet.getUser().getScreenName() + " - N:" + tweet.getUser().getName() + " - L: " + tweet.getUser().getLocation() + " - ID: " + tweet.getUser().getId());
+//            }
+//        } while ((queryNO = resultNO.nextQuery()) != null);
+//        count = tweetsNO.size();
+//        System.out.println("TOTAL NO: "+count);
+//        return count;
+//    }
+//
+//    public long cercoSI() throws TwitterException{
+//        long count;
+//        Query querySI = new Query("#bastaunsi");
+//        QueryResult resultSI;
+//        do {
+//            resultSI = twitter.search(querySI);
+//            tweetsSI = resultSI.getTweets();
+//            for (Status tweet : tweetsSI) {
+////                TWUS t = new TWUS(tweet.getUser().getId(),tweet.getUser().getScreenName(),tweet.getUser().getName(),tweet.getUser().getLocation(),false);
+//                if(!users.containsKey(tweet.getUser().getId())) users.put(tweet.getUser().getId(), t);
+//                TWUS user = users.get(tweet.getUser().getId());
+//                if((!user.isPoliticalPosition()) && (!user.isAmbiguous())) user.setAmbiguous();
+////                user.addTweetToUser(tweet);
+//                System.out.println("[SI] @"+tweet.getUser().getScreenName() + " - N:" + tweet.getUser().getName() + " - L: " + tweet.getUser().getLocation() + " - ID: " + tweet.getUser().getId());
+//            }
+//        } while ((querySI = resultSI.nextQuery()) != null);
+//        count = tweetsSI.size();
+//        System.out.println("TOTAL NO: "+count);
+//        return count;
+//    }
     public void saveJson(String filename){
 //        Gson gson = new Gson();
 //        String userJson = gson.toJson(tweets);

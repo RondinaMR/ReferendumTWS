@@ -12,11 +12,11 @@ public class App
 //    public static void main( String[] args )
 //    {
 //        AppController apc = new AppController();
-//        /*try{
+//        try{
 //            TweetStreamHandler tsh = new TweetStreamHandler();
 //            tsh.loadJSON();
 //            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
-//
+
 //            Timer timer = new Timer();
 //            TimerTask hourlyTask = new TimerTask() {
 //                @Override
@@ -27,9 +27,10 @@ public class App
 //            };
 //            timer.schedule (hourlyTask, 0, 1000*60*60);
 //            new StreamGUI(tsh);
+//            tsh.exportAllJSON();
 //        }catch(Exception ex){
 //            System.out.println(ex.getMessage());
-//        }*/
+//        }
 //    }
 }
 

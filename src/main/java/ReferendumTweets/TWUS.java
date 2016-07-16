@@ -15,46 +15,57 @@ import java.util.List;
  * Created by Marco on 11/06/2016.
  */
 public class TWUS {
-    private String screenName;
-    private String name;
+//    private String screenName;
+//    private String name;
     private long userID;
     private String location;
-    private List<Status> tweets = new LinkedList<>();
     private boolean politicalPosition;
     private boolean ambiguous = false;
     private boolean positionSetted = false;
 
-    public TWUS(long userID, String screenName, String name, String location) {
-        this.screenName = screenName;
-        this.name = name;
+    public TWUS(long userID, String location) {
         this.userID = userID;
         this.location = location;
     }
 
-    public TWUS(long userID, String screenName, String name, String location, boolean politicalPosition) {
-        this.screenName = screenName;
-        this.name = name;
+    public TWUS(long userID, String location, boolean politicalPosition) {
         this.userID = userID;
         this.location = location;
         this.politicalPosition = politicalPosition;
         this.positionSetted = true;
     }
 
-    public String getScreenName(){
-        return screenName;
-    }
+//    public TWUS(long userID, String screenName, String name, String location) {
+////        this.screenName = screenName;
+////        this.name = name;
+//        this.userID = userID;
+//        this.location = location;
+//    }
+//
+//    public TWUS(long userID, String screenName, String name, String location, boolean politicalPosition) {
+////        this.screenName = screenName;
+////        this.name = name;
+//        this.userID = userID;
+//        this.location = location;
+//        this.politicalPosition = politicalPosition;
+//        this.positionSetted = true;
+//    }
 
-    public void setScreenName(String screenName) {
-        this.screenName = screenName;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+//    public String getScreenName(){
+//        return screenName;
+//    }
+//
+//    public void setScreenName(String screenName) {
+//        this.screenName = screenName;
+//    }
+//
+//    public String getName() {
+//        return name;
+//    }
+//
+//    public void setName(String name) {
+//        this.name = name;
+//    }
 
     public long getUserID() {
         return userID;
@@ -62,14 +73,6 @@ public class TWUS {
 
     public void setUserID(long userID) {
         this.userID = userID;
-    }
-
-    public List<Status> getTweets() {
-        return tweets;
-    }
-
-    public void addTweetToUser(Status tweet) {
-        tweets.add(tweet);
     }
 
     public String getLocation() {
@@ -99,7 +102,7 @@ public class TWUS {
 
     @Override
     public String toString(){
-        return "<" + userID + "> " + screenName + ", " + name + " - " + location + " = " + politicalPosition + "(" + ambiguous + ")";
+        return "<" + userID + "> " /*+ screenName + ", " + name*/ + " - " + location + " = " + politicalPosition + "(" + ambiguous + ")";
     }
 
 
