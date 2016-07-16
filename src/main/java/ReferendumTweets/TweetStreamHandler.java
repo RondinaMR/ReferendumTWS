@@ -188,6 +188,7 @@ public class TweetStreamHandler {
 
                 if(tweet.getCreatedAt().compareTo(c1.getTime()) > 0){
                     statistics.add(new Statistic(c1.getTime(),yes,no,other,getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
+                    System.out.println("Tweets: " + getNumberOfTweets());
                     yes = (long)0;
                     no = (long)0;
                     other = (long)0;
@@ -240,6 +241,11 @@ public class TweetStreamHandler {
     public Long getNumberOfOtherUsers(){
         return users.values().stream()
                 .filter(u -> (!u.isPositionSetted() || u.isAmbiguous()))
+                .collect(counting());
+    }
+
+    public Long getNumberOfUsers(){
+        return users.values().stream()
                 .collect(counting());
     }
 
