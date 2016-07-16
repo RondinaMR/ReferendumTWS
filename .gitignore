@@ -65,4 +65,3 @@ target/maven-archiver/
 target/site/
 target/surefire-reports/
 *.json
-/.idea/
