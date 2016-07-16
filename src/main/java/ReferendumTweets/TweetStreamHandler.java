@@ -616,5 +616,6 @@ public class TweetStreamHandler {
         this.toJSONVotingTrend();
         this.toJSONpopularitySum();
         this.toJSONpopVoting();
+        toJSONstatistics();
     }
 }
