@@ -77,6 +77,9 @@ public class AppController {
             }else{
                 return new RestMessage(tsh.getNumberOfTweets(),State.Unknown);
             }
+        }else if(name.equalsIgnoreCase("reload") && status == 0){
+            tsh.loadJSON();
+            return new RestMessage(status,State.Stopped);
         }else{
             return new RestMessage(status,State.Unknown);
         }

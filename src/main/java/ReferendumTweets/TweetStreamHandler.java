@@ -18,7 +18,7 @@ public class TweetStreamHandler {
         private StatusListener listener;
         private String[] queries;
         private Status firstStatus;
-        Calendar clast = Calendar.getInstance();
+        private Calendar clast = Calendar.getInstance();
 
     public TweetStreamHandler() throws FileNotFoundException{
         ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -149,6 +149,8 @@ public class TweetStreamHandler {
     }
 
     public void loadJSON(){
+        statistics.clear();
+        users.clear();
         System.out.println("Starting loading data...");
         boolean first = true;
         Calendar c1 = Calendar.getInstance();
@@ -209,7 +211,7 @@ public class TweetStreamHandler {
             System.exit(-1);
         }
 
-        System.out.println("Loaded ?" + " tweets by " + users.size() + " users.");
+        System.out.println("Loaded "+ getNumberOfTweets() + " tweets by " + users.size() + " users.");
         users.values().stream()
                 .filter(u -> u.isPositionSetted())
                 .filter(u -> !u.isAmbiguous())
