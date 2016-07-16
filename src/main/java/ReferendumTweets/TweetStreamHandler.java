@@ -18,7 +18,7 @@ public class TweetStreamHandler {
         private StatusListener listener;
         private String[] queries;
         private Status firstStatus;
-        private Date startingDate;
+        Calendar clast = Calendar.getInstance();
 
     public TweetStreamHandler() throws FileNotFoundException{
         ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -30,11 +30,32 @@ public class TweetStreamHandler {
                 .setJSONStoreEnabled(true);
 
         twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
+
         listener = new StatusListener() {
             @Override
             public void onStatus(Status status) {
+                Long yes = (long) 0;
+                Long no = (long) 0;
+                Long other = (long) 0;
+                int thisPosition;
+                thisPosition = scanTweet(status);
+                if(thisPosition>0){
+                    yes++;
+                }else if(thisPosition<0){
+                    no++;
+                }else{
+                    other++;
+                }
                 addUser(status);
                 saveStatusToJSON(status);
+                System.out.println("THIS: " + status.getCreatedAt() + " / LOAD AT: " + clast.getTime());
+                if(status.getCreatedAt().compareTo(clast.getTime())>=0){
+                    statistics.add(new Statistic(clast.getTime(),yes,no,other,getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
+                    yes = (long)0;
+                    no = (long)0;
+                    other = (long)0;
+                    clast.add(Calendar.HOUR_OF_DAY,1);
+                }
                 System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText() + " (" + status.getCreatedAt() + ") <" + status.getPlace() + " / " + status.getUser().getLocation() + ">");
             }
 
@@ -134,11 +155,7 @@ public class TweetStreamHandler {
         Long yes = (long) 0;
         Long no = (long) 0;
         Long other = (long) 0;
-        Long yesUsers;
-        Long noUsers;
-        Long otherUsers;
         Integer thisPosition;
-        Statistic stat;
         try {
             int n=0;
             File[] files = new File("statuses").listFiles((dir,name) -> name.endsWith(".json"));
@@ -152,7 +169,6 @@ public class TweetStreamHandler {
                     c1.set(Calendar.MINUTE,0);
                     c1.set(Calendar.SECOND,0);
                     c1.set(Calendar.MILLISECOND,0);
-                    startingDate = c1.getTime();
                     c1.add(Calendar.HOUR_OF_DAY,1);
                     first = false;
                 }
@@ -170,11 +186,11 @@ public class TweetStreamHandler {
 
                 if(tweet.getCreatedAt().compareTo(c1.getTime()) > 0){
                     statistics.add(new Statistic(c1.getTime(),yes,no,other,getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
-
                     yes = (long)0;
                     no = (long)0;
                     other = (long)0;
                     c1.add(Calendar.HOUR_OF_DAY,1);
+                    clast.setTime(c1.getTime());
                 }
 
                 n++;
