@@ -619,4 +619,41 @@ public class TweetStreamHandler {
         this.toJSONpopVoting();
         toJSONstatistics();
     }
+
+    public String toStringVotingIntentions(){
+        String rawJSON = "";
+        try {
+            rawJSON = readFirstLine(new File("exports/votingIntentions.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rawJSON;
+    }
+    public String toStringVotingTrend(){
+        String rawJSON = "";
+        try {
+            rawJSON = readFirstLine(new File("exports/votingTrend.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rawJSON;
+    }
+    public String toStringPopularitySum(){
+        String rawJSON = "";
+        try {
+            rawJSON = readFirstLine(new File("exports/popularitySum.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rawJSON;
+    }
+    public String toStringPopularityVote(){
+        String rawJSON = "";
+        try {
+            rawJSON = readFirstLine(new File("exports/popularityVote.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rawJSON;
+    }
 }

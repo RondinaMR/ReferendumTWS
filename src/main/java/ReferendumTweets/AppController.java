@@ -1,13 +1,27 @@
 package ReferendumTweets;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.GenericHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.*;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Created by Marco on 16/07/2016.
@@ -81,6 +95,42 @@ public class AppController {
             return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
         }else{
             return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unknown);
+        }
+    }
+
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/voting_intentions",produces="application/json")
+    public @ResponseBody Json apiVI() {
+        return new Json(tsh.toStringVotingIntentions());
+    }
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/voting_trend",produces="application/json")
+    public @ResponseBody Json apiVT() {
+        return new Json(tsh.toStringVotingTrend());
+    }
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/popularity_sum",produces="application/json")
+    public @ResponseBody Json apiPS() {
+        return new Json(tsh.toStringPopularitySum());
+    }
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/popularity_vote",produces="application/json")
+    public @ResponseBody Json apiPU() {
+        return new Json(tsh.toStringPopularityVote());
+    }
+
+    class Json {
+
+        private final String value;
+
+        public Json(String value) {
+            this.value = value;
+        }
+
+        @JsonValue
+        @JsonRawValue
+        public String value() {
+            return value;
         }
     }
 }
