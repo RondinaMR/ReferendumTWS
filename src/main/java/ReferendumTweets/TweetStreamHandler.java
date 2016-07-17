@@ -22,6 +22,9 @@ public class TweetStreamHandler {
         private String[] queries;
         private Status firstStatus;
         private Calendar clast = Calendar.getInstance();
+        private Long tmpYes = (long) 0;
+        private Long tmpNo = (long) 0;
+        private Long tmpOther = (long) 0;
 
     public TweetStreamHandler() throws FileNotFoundException{
         ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -37,26 +40,23 @@ public class TweetStreamHandler {
         listener = new StatusListener() {
             @Override
             public void onStatus(Status status) {
-                Long yes = (long) 0;
-                Long no = (long) 0;
-                Long other = (long) 0;
                 int thisPosition;
                 thisPosition = scanTweet(status);
                 if(thisPosition>0){
-                    yes++;
+                    tmpYes++;
                 }else if(thisPosition<0){
-                    no++;
+                    tmpNo++;
                 }else{
-                    other++;
+                    tmpOther++;
                 }
                 addUser(status);
                 saveStatusToJSON(status);
                 System.out.println("THIS: " + status.getCreatedAt() + " / LOAD AT: " + clast.getTime());
                 if(status.getCreatedAt().compareTo(clast.getTime())>=0){
-                    statistics.add(new Statistic(clast.getTime(),yes,no,other,getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
-                    yes = (long)0;
-                    no = (long)0;
-                    other = (long)0;
+                    statistics.add(new Statistic(clast.getTime(),tmpYes,tmpNo,tmpOther,getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
+                    tmpYes = (long)0;
+                    tmpNo = (long)0;
+                    tmpOther = (long)0;
                     clast.add(Calendar.HOUR_OF_DAY,1);
                 }
                 System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText() + " (" + status.getCreatedAt() + ") <" + status.getPlace() + " / " + status.getUser().getLocation() + ">");
