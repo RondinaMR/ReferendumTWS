@@ -12,6 +12,8 @@ import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -27,6 +29,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Created by Marco on 16/07/2016.
  */
 @RestController
+@Configuration
+@ComponentScan
 @EnableAutoConfiguration
 public class AppController {
 
