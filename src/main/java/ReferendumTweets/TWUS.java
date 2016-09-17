@@ -2,6 +2,7 @@ package ReferendumTweets;
 
 import twitter4j.Status;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class TWUS {
 //    private String name;
     private long userID;
     private String location;
+    private Date lastTweet;
     private boolean politicalPosition;
     private boolean ambiguous = false;
     private boolean positionSetted = false;
@@ -26,9 +28,10 @@ public class TWUS {
     public TWUS() {
     }
 
-    public TWUS(long userID, String location) {
+    public TWUS(long userID, String location, Date lastTweet) {
         this.userID = userID;
         this.location = location;
+        this.lastTweet = lastTweet;
     }
 
     public TWUS(long userID, String location, boolean politicalPosition) {
@@ -102,6 +105,14 @@ public class TWUS {
     }
 
     public boolean isPositionSetted(){return positionSetted;}
+
+    public Date getLastTimeTweet() {
+        return lastTweet;
+    }
+
+    public void setLastTimeTweet(Date lastTweet) {
+        this.lastTweet = lastTweet;
+    }
 
     @Override
     public String toString(){

@@ -15,8 +15,8 @@ public class App
 //        try{
 //            TweetStreamHandler tsh = new TweetStreamHandler();
 //            tsh.loadJSON();
-//            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
-
+//            //tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
+//
 //            Timer timer = new Timer();
 //            TimerTask hourlyTask = new TimerTask() {
 //                @Override

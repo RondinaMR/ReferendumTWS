@@ -97,6 +97,9 @@ public class AppController {
         }else if(name.equalsIgnoreCase("savestat") && status == 0){
             tsh.toJSONstatistics();
             return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+        }else if(name.equalsIgnoreCase("export") && status == 0){
+            tsh.exportAllJSON();
+            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
         }else{
             return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unknown);
         }
@@ -111,6 +114,11 @@ public class AppController {
     @RequestMapping(value="/referendum/voting_trend",produces="application/json")
     public @ResponseBody Json apiVT() {
         return new Json(tsh.toStringVotingTrend());
+    }
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/voting_week_trend",produces="application/json")
+    public @ResponseBody Json apiVWT() {
+        return new Json(tsh.toStringVotingWeekTrend());
     }
     @CrossOrigin()
     @RequestMapping(value="/referendum/popularity_sum",produces="application/json")
