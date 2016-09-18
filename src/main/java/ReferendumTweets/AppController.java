@@ -115,6 +115,10 @@ public class AppController {
     public @ResponseBody Json apiVT() {
         return new Json(tsh.toStringVotingTrend());
     }
+    @RequestMapping(value="/referendum/voting_day_trend",produces="application/json")
+    public @ResponseBody Json apiVDT() {
+        return new Json(tsh.toStringVotingDayTrend());
+    }
     @CrossOrigin()
     @RequestMapping(value="/referendum/voting_week_trend",produces="application/json")
     public @ResponseBody Json apiVWT() {
@@ -129,6 +133,38 @@ public class AppController {
     @RequestMapping(value="/referendum/popularity_vote",produces="application/json")
     public @ResponseBody Json apiPU() {
         return new Json(tsh.toStringPopularityVote());
+    }
+    //Hashtags
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/hashtags_no",produces="application/json")
+    public @ResponseBody Json apiHN() {
+        return new Json(tsh.toStringEntity("hashtags","No"));
+    }
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/hashtags_yes",produces="application/json")
+    public @ResponseBody Json apiHY() {
+        return new Json(tsh.toStringEntity("hashtags","Yes"));
+    }
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/hashtags_tot",produces="application/json")
+    public @ResponseBody Json apiHT() {
+        return new Json(tsh.toStringEntity("hashtags","Tot"));
+    }
+    //Mentions
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/mentions_no",produces="application/json")
+    public @ResponseBody Json apiMN() {
+        return new Json(tsh.toStringEntity("mentions","No"));
+    }
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/mentions_yes",produces="application/json")
+    public @ResponseBody Json apiMY() {
+        return new Json(tsh.toStringEntity("mentions","Yes"));
+    }
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/mentions_tot",produces="application/json")
+    public @ResponseBody Json apiMT() {
+        return new Json(tsh.toStringEntity("mentions","Tot"));
     }
 
     class Json {

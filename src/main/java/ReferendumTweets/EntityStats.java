@@ -6,17 +6,17 @@ import twitter4j.TweetEntity;
  * Created by marco on 17/09/2016.
  */
 public class EntityStats {
-    private TweetEntity entity;
+    private String entity;
     private long yesMentions = (long) 0;
     private long noMentions = (long) 0;
     private long otherMentions = (long) 0;
 
-    public EntityStats(TweetEntity entity) {
+    public EntityStats(String entity) {
 
-        this.entity = entity;
+        this.entity = entity.toLowerCase();
     }
 
-    public TweetEntity getEntity() {
+    public String getEntity() {
         return entity;
     }
 

@@ -113,7 +113,7 @@ public class StreamGUI extends JFrame{
         exVotingTrend.addActionListener((event) -> {
             if(event.getActionCommand().equals("Voting Trend")){
                 refresh.doClick();
-                tsh.toJSONVotingTrend();
+                tsh.toJSONVotingTrend("");
                 JOptionPane.showMessageDialog(null,"Voting Trend successfully exported!");
             }
         });

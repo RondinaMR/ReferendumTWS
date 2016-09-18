@@ -250,7 +250,7 @@ public class TweetStreamHandler {
         for(HashtagEntity he : thisHashtags){
             if(he.getText().compareToIgnoreCase("iovotono")!=0 && he.getText().compareToIgnoreCase("bastaunsi")!=0 && he.getText().compareToIgnoreCase("referendumcostituzionale")!=0 && he.getText().compareToIgnoreCase("votono")!=0 && he.getText().compareToIgnoreCase("votosi")!=0 && he.getText().compareToIgnoreCase("italiachedicesi")!=0 && he.getText().compareToIgnoreCase("iovotosi")!=0){
                 if(!(hashtags.containsKey(he.getText()))){
-                    hashtags.put(he.getText(),new EntityStats(he));
+                    hashtags.put(he.getText(),new EntityStats(he.getText().toLowerCase()));
                 }
                 if(position>0){
                     hashtags.get(he.getText()).addYesMention();
@@ -266,7 +266,7 @@ public class TweetStreamHandler {
         UserMentionEntity[] thisMentions = tweet.getUserMentionEntities();
         for(UserMentionEntity me : thisMentions){
             if(!(mentions.containsKey(me.getText()))){
-                mentions.put(me.getText(),new EntityStats(me));
+                mentions.put(me.getText(),new EntityStats(me.getText().toLowerCase()));
             }
             if(position>0){
                 mentions.get(me.getText()).addYesMention();
@@ -654,16 +654,24 @@ public class TweetStreamHandler {
         }
     }
 
-    public void toJSONVotingTrend(){
+    public void toJSONVotingTrend(String type){
         try {
-            Long yn = (long) 0;
-            Long nn = (long) 0;
+
+            Iterator<UsersStats> itr;
+
+            if(type.compareToIgnoreCase("day")==0){
+                itr = statisticsDay.iterator();
+            }else if(type.compareToIgnoreCase("week")==0){
+                itr = statisticsWeek.iterator();
+            }else{
+                itr = statistics.iterator();
+            }
+
             Double yp = 0.0;
 
             UsersStats last;
-            Iterator<UsersStats> itr = statistics.iterator();
 
-            System.out.println("Exporting votingTrend.json...");
+            System.out.println("Exporting voting"+type+"Trend.json...");
 
             StringBuilder jsondata = new StringBuilder("");
             jsondata.append("[");
@@ -680,46 +688,10 @@ public class TweetStreamHandler {
                 }
             }
             jsondata.append("]");
-            String filename = "exports/" + "votingTrend.json";
+            String filename = "exports/" + "voting"+type+"Trend.json";
             new File("exports").mkdir();
             storeJSON(jsondata.toString(),filename);
-            System.out.println("Successfully exported votingTrend.json!");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void toJSONVotingWeekTrend(){
-        try {
-            Long yn = (long) 0;
-            Long nn = (long) 0;
-            Double yp = 0.0;
-
-            UsersStats last;
-            Iterator<UsersStats> itr = statisticsWeek.iterator();
-
-            System.out.println("Exporting votingWeekTrend.json...");
-
-            StringBuilder jsondata = new StringBuilder("");
-            jsondata.append("[");
-
-            while(itr.hasNext()){
-                last = itr.next();
-                System.out.println("[Y] "+last.getYesUsers()+" / [NO] "+last.getNoUsers());
-                yp = numToPerc(last.getYesUsers(),last.getNoUsers(),(long)0,1);
-
-                jsondata.append("{\"date\":").append(last.getDate().getTime()).append(",");
-                jsondata.append("\"SI\":").append(String.format(Locale.US,"%1$.4f",yp)).append(",");
-                jsondata.append("\"NO\":").append(String.format(Locale.US,"%1$.4f",(1-yp))).append("}");
-                if(itr.hasNext()){
-                    jsondata.append(",");
-                }
-            }
-            jsondata.append("]");
-            String filename = "exports/" + "votingWeekTrend.json";
-            new File("exports").mkdir();
-            storeJSON(jsondata.toString(),filename);
-            System.out.println("Successfully exported votingWeekTrend.json!");
+            System.out.println("Successfully exported voting"+type+"Trend.json!");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -914,49 +886,31 @@ public class TweetStreamHandler {
         }
     }
 
-    public void toJSONhashtags(Iterator<EntityStats> thisItr,String type){
+    public void toJSONentity(String type,String mode){
         try {
             EntityStats last;
-            Iterator<EntityStats> itr = thisItr;
-
-            System.out.println("Exporting hashtags"+type+".json...");
-
-            StringBuilder jsondata = new StringBuilder("");
-            jsondata.append("[");
-
-            while(itr.hasNext()){
-                last = itr.next();
-
-                jsondata.append("{\"hashtag\":\"").append(last.getEntity().getText()).append("\",");
-
-                if(type.compareToIgnoreCase("tot")==0){
-                    jsondata.append("\"mentions\":").append(last.getTotalMentions()).append("}");
-                }else if(type.compareToIgnoreCase("yes")==0){
-                    jsondata.append("\"mentions\":").append(last.getYesMentions()).append("}");
-                }else if(type.compareToIgnoreCase("no")==0){
-                    jsondata.append("\"mentions\":").append(last.getNoMentions()).append("}");
+            Iterator<EntityStats> itr;
+            if(type.compareToIgnoreCase("hashtags")==0){
+                if(mode.compareToIgnoreCase("yes")==0){
+                    itr = hashtags.values().stream().sorted(comparing(EntityStats::getYesMentions)).iterator();
+                }else if(mode.compareToIgnoreCase("no")==0){
+                    itr = hashtags.values().stream().sorted(comparing(EntityStats::getNoMentions)).iterator();
+                }else{
+                    itr = hashtags.values().stream().sorted(comparing(EntityStats::getTotalMentions)).iterator();
                 }
-
-                if(itr.hasNext()){
-                    jsondata.append(",");
+            }else if(type.compareToIgnoreCase("mentions")==0){
+                if(mode.compareToIgnoreCase("yes")==0){
+                    itr = mentions.values().stream().sorted(comparing(EntityStats::getYesMentions)).iterator();
+                }else if(mode.compareToIgnoreCase("no")==0){
+                    itr = mentions.values().stream().sorted(comparing(EntityStats::getNoMentions)).iterator();
+                }else{
+                    itr = mentions.values().stream().sorted(comparing(EntityStats::getTotalMentions)).iterator();
                 }
+            }else{
+                itr = hashtags.values().stream().sorted(comparing(EntityStats::getTotalMentions)).iterator();
             }
-            jsondata.append("]");
-            String filename = "exports/" + "hashtags"+type+".json";
-            new File("exports").mkdir();
-            storeJSON(jsondata.toString(),filename);
-            System.out.println("Successfully exported hashtags"+type+".json!");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
-    public void toJSONmentions(Iterator<EntityStats> thisItr,String type){
-        try {
-            EntityStats last;
-            Iterator<EntityStats> itr = thisItr;
-
-            System.out.println("Exporting mentions"+type+".json...");
+            System.out.println("Exporting "+type+mode+".json...");
 
             StringBuilder jsondata = new StringBuilder("");
             jsondata.append("[");
@@ -964,23 +918,25 @@ public class TweetStreamHandler {
             while(itr.hasNext()){
                 last = itr.next();
 
-                jsondata.append("{\"mention\":\"").append(last.getEntity().getText()).append("\",");
-                if(type.compareToIgnoreCase("tot")==0){
+                jsondata.append("{\"entity\":\"").append(last.getEntity()).append("\" ,");
+
+                if(mode.compareToIgnoreCase("tot")==0){
                     jsondata.append("\"num\":").append(last.getTotalMentions()).append("}");
-                }else if(type.compareToIgnoreCase("yes")==0){
+                }else if(mode.compareToIgnoreCase("yes")==0){
                     jsondata.append("\"num\":").append(last.getYesMentions()).append("}");
-                }else if(type.compareToIgnoreCase("no")==0){
+                }else if(mode.compareToIgnoreCase("no")==0){
                     jsondata.append("\"num\":").append(last.getNoMentions()).append("}");
                 }
+
                 if(itr.hasNext()){
                     jsondata.append(",");
                 }
             }
             jsondata.append("]");
-            String filename = "exports/" + "mentions"+type+".json";
+            String filename = "exports/" + type + mode + ".json";
             new File("exports").mkdir();
             storeJSON(jsondata.toString(),filename);
-            System.out.println("Successfully exported mentions"+type+".json!");
+            System.out.println("Successfully exported "+type+mode+".json!");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -988,16 +944,17 @@ public class TweetStreamHandler {
 
     public void exportAllJSON(){
         this.toJSONVotingIntentions();
-        this.toJSONVotingTrend();
-        this.toJSONVotingWeekTrend();
+        this.toJSONVotingTrend("");
+        this.toJSONVotingTrend("Day");
+        this.toJSONVotingTrend("Week");
         this.toJSONpopularitySum();
         this.toJSONpopVoting();
-        this.toJSONhashtags(hashtags.values().stream().sorted(comparing(EntityStats::getTotalMentions)).iterator(),"Tot");
-        this.toJSONhashtags(hashtags.values().stream().sorted(comparing(EntityStats::getYesMentions)).iterator(),"Yes");
-        this.toJSONhashtags(hashtags.values().stream().sorted(comparing(EntityStats::getNoMentions)).iterator(),"No");
-        this.toJSONmentions(mentions.values().stream().sorted(comparing(EntityStats::getTotalMentions)).iterator(),"Tot");
-        this.toJSONmentions(mentions.values().stream().sorted(comparing(EntityStats::getYesMentions)).iterator(),"Yes");
-        this.toJSONmentions(mentions.values().stream().sorted(comparing(EntityStats::getNoMentions)).iterator(),"No");
+        this.toJSONentity("hashtags","Tot");
+        this.toJSONentity("hashtags","Yes");
+        this.toJSONentity("hashtags","No");
+        this.toJSONentity("mentions","Tot");
+        this.toJSONentity("mentions","Yes");
+        this.toJSONentity("mentions","No");
         toJSONstatistics();
     }
 
@@ -1014,6 +971,15 @@ public class TweetStreamHandler {
         String rawJSON = "";
         try {
             rawJSON = readFirstLine(new File("exports/votingTrend.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rawJSON;
+    }
+    public String toStringVotingDayTrend(){
+        String rawJSON = "";
+        try {
+            rawJSON = readFirstLine(new File("exports/votingDayTrend.json"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -1046,4 +1012,14 @@ public class TweetStreamHandler {
         }
         return rawJSON;
     }
+    public String toStringEntity(String type,String mode){
+        String rawJSON = "";
+        try {
+            rawJSON = readFirstLine(new File("exports/"+type+mode+".json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rawJSON;
+    }
+
 }
