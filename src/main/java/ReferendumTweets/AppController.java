@@ -1,29 +1,16 @@
 package ReferendumTweets;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.GenericHttpMessageConverter;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.*;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Created by Marco on 16/07/2016.
@@ -115,6 +102,7 @@ public class AppController {
     public @ResponseBody Json apiVT() {
         return new Json(tsh.toStringVotingTrend());
     }
+    @CrossOrigin()
     @RequestMapping(value="/referendum/voting_day_trend",produces="application/json")
     public @ResponseBody Json apiVDT() {
         return new Json(tsh.toStringVotingDayTrend());

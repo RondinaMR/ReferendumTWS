@@ -918,15 +918,8 @@ public class TweetStreamHandler {
         try {
             EntityStats last;
             Iterator<EntityStats> itr;
-            if(type.compareToIgnoreCase("hashtags")==0){
-                if(mode.compareToIgnoreCase("yes")==0){
-                    itr = hashtags.values().stream().sorted(comparing(EntityStats::getYesMentions)).iterator();
-                }else if(mode.compareToIgnoreCase("no")==0){
-                    itr = hashtags.values().stream().sorted(comparing(EntityStats::getNoMentions)).iterator();
-                }else{
-                    itr = hashtags.values().stream().sorted(comparing(EntityStats::getTotalMentions)).iterator();
-                }
-            }else if(type.compareToIgnoreCase("mentions")==0){
+
+            if(type.compareToIgnoreCase("mentions")==0){
                 if(mode.compareToIgnoreCase("yes")==0){
                     itr = mentions.values().stream().sorted(comparing(EntityStats::getYesMentions)).iterator();
                 }else if(mode.compareToIgnoreCase("no")==0){
@@ -935,7 +928,14 @@ public class TweetStreamHandler {
                     itr = mentions.values().stream().sorted(comparing(EntityStats::getTotalMentions)).iterator();
                 }
             }else{
-                itr = hashtags.values().stream().sorted(comparing(EntityStats::getTotalMentions)).iterator();
+                //Hashtags
+                if(mode.compareToIgnoreCase("yes")==0){
+                    itr = hashtags.values().stream().sorted(comparing(EntityStats::getYesMentions)).iterator();
+                }else if(mode.compareToIgnoreCase("no")==0){
+                    itr = hashtags.values().stream().sorted(comparing(EntityStats::getNoMentions)).iterator();
+                }else{
+                    itr = hashtags.values().stream().sorted(comparing(EntityStats::getTotalMentions)).iterator();
+                }
             }
 
             System.out.println("Exporting "+type+mode+".json...");
