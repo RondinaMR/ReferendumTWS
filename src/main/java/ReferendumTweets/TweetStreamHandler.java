@@ -246,15 +246,15 @@ public class TweetStreamHandler {
         HashtagEntity[] thisHashtags = tweet.getHashtagEntities();
         for(HashtagEntity he : thisHashtags){
             if(he.getText().compareToIgnoreCase("iovotono")!=0 && he.getText().compareToIgnoreCase("bastaunsi")!=0 && he.getText().compareToIgnoreCase("referendumcostituzionale")!=0 && he.getText().compareToIgnoreCase("votono")!=0 && he.getText().compareToIgnoreCase("votosi")!=0 && he.getText().compareToIgnoreCase("italiachedicesi")!=0 && he.getText().compareToIgnoreCase("iovotosi")!=0){
-                if(!(hashtags.containsKey(he.getText()))){
-                    hashtags.put(he.getText(),new EntityStats(he.getText().toLowerCase()));
+                if(!(hashtags.containsKey(he.getText().toLowerCase()))){
+                    hashtags.put(he.getText().toLowerCase(),new EntityStats(he.getText().toLowerCase()));
                 }
                 if(position>0){
-                    hashtags.get(he.getText()).addYesMention();
+                    hashtags.get(he.getText().toLowerCase()).addYesMention();
                 }else if(position<0){
-                    hashtags.get(he.getText()).addNoMention();
+                    hashtags.get(he.getText().toLowerCase()).addNoMention();
                 }else{
-                    hashtags.get(he.getText()).addOtherMention();
+                    hashtags.get(he.getText().toLowerCase()).addOtherMention();
                 }
             }
         }
