@@ -302,6 +302,34 @@ public class TweetStreamHandler {
         try {
             long n=0;
             File[] files = new File("statuses").listFiles((dir,name) -> name.endsWith(".json"));
+            /**********************************************/
+            class Pair implements Comparable {
+                public long t;
+                public File f;
+
+                public Pair(File file) {
+                    f = file;
+                    t = file.lastModified();
+                }
+
+                public int compareTo(Object o) {
+                    long u = ((Pair) o).t;
+                    return t < u ? -1 : t == u ? 0 : 1;
+                }
+            }
+
+            // Obtain the array of (file, timestamp) pairs.
+            Pair[] pairs = new Pair[files.length];
+            for (int i = 0; i < files.length; i++)
+                pairs[i] = new Pair(files[i]);
+
+            // Sort them by timestamp.
+            Arrays.sort(pairs);
+
+            // Take the sorted pairs and extract only the file part, discarding the timestamp.
+            for (int i = 0; i < files.length; i++)
+                files[i] = pairs[i].f;
+            /***********************************************/
             for (File file : files) {
                 String rawJSON = readFirstLine(file);
                 Status tweet = TwitterObjectFactory.createStatus(rawJSON);
