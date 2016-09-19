@@ -300,7 +300,7 @@ public class TweetStreamHandler {
         numWU[0] = numWU[1] = numWU[2] = (long)0;
         Integer thisPosition;
         try {
-            int n=0;
+            long n=0;
             File[] files = new File("statuses").listFiles((dir,name) -> name.endsWith(".json"));
             for (File file : files) {
                 String rawJSON = readFirstLine(file);
@@ -425,7 +425,7 @@ public class TweetStreamHandler {
 
                 n++;
                 if(n%1000==0){
-                    System.out.println(n);
+                    System.out.println(n + " : " + cw.getTime());
                 }
 
             }
