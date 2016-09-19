@@ -425,7 +425,7 @@ public class TweetStreamHandler {
 
                 n++;
                 if(n%1000==0){
-                    System.out.println(n + " : " + cw.getTime());
+                    System.out.println(n + " : " + tweet.getCreatedAt() + " : " + cw.getTime());
                 }
 
             }
