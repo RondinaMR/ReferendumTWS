@@ -1,9 +1,6 @@
 package ReferendumTweets;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.catalina.*;
-import org.apache.tomcat.util.log.SystemLogHandler;
-import org.joda.time.MutableDateTime;
 import twitter4j.*;
 import twitter4j.conf.*;
 
@@ -288,9 +285,6 @@ public class TweetStreamHandler {
         TWUS t;
         System.out.println("Starting loading data...");
         boolean first = true;
-        MutableDateTime dth = new MutableDateTime(); //Date Time Hour
-        MutableDateTime dtd = new MutableDateTime(); //Date Time Day
-        MutableDateTime dtw = new MutableDateTime(); //Date Time Week
         Calendar c1 = Calendar.getInstance();
         Calendar cw = Calendar.getInstance();
         Calendar cd = Calendar.getInstance();

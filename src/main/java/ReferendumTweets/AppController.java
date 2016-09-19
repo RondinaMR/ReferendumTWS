@@ -47,9 +47,10 @@ public class AppController {
     private void init(){
         try {
             tsh = new TweetStreamHandler();
-//            tsh.loadJSON();
-//            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
-            tsh.loadStatistics();
+            tsh.loadJSON();
+            tsh.exportAllJSON();
+            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
+//            tsh.loadStatistics();
             System.out.println("Starting TIMER");
             timer.schedule(hourlyTask, 0, 1000*60*60);
         } catch (FileNotFoundException e) {
