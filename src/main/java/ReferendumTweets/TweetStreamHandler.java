@@ -21,10 +21,15 @@ public class TweetStreamHandler {
         final long HOUR_MILLIS = 1000*60*60;
         final long DAY_MILLIS = HOUR_MILLIS * 24;
         final long WEEK_MILLIS = DAY_MILLIS * 7;
+        //Statistica oraria di tweets
         private LinkedList<TweetsStats> hourTweets = new LinkedList<>();
+        //Statistica CUMULATIVA di utenti / h  <--> Storico
         private LinkedList<UsersStats> statistics = new LinkedList<>();
+        //Statistica settimanale di utenti / h
         private LinkedList<UsersStats> statisticsWeek = new LinkedList<>();
+        //Statistica giornaliera di utenti / h
         private LinkedList<UsersStats> statisticsDay = new LinkedList<>();
+        //Statistica oraria di utenti / h
         private LinkedList<UsersStats> statisticsHour = new LinkedList<>();
         private HashMap<String,EntityStats> hashtags = new HashMap<>();
         private HashMap<String,EntityStats> mentions = new HashMap<>();
@@ -131,6 +136,7 @@ public class TweetStreamHandler {
                     statisticsHour.add(new UsersStats(clastH.getTime(),numHU[0],numHU[1],numHU[2]));
                     hourTweets.add(new TweetsStats(clastH.getTime(),numHT[0],numHT[1],numHT[2]));
                     numHT[0] = numHT[1] = numHT[2] = (long)0;
+                    numHU[0] = numHU[1] = numHU[2] = (long)0;
                     clastH.add(Calendar.HOUR_OF_DAY,1);
                 }
                 //DAY
@@ -226,7 +232,7 @@ public class TweetStreamHandler {
 
     private boolean NoCondition(String text){
         text.toLowerCase();
-        if(text.contains("#iovotono") || (text.contains(("#referendumcostituzionale")) && text.contains("#votono"))){
+        if(text.contains("#iovotono") || text.contains("#iodicono") || (text.contains(("#riformacostituzionale")) && text.contains("#dicono")) || (text.contains(("#riformacostituzionale")) && text.contains("#votono")) || (text.contains(("#referendumcostituzionale")) && text.contains("#dicono")) || (text.contains(("#referendumcostituzionale")) && text.contains("#votono"))){
             return true;
         }else{
             return false;
@@ -235,7 +241,7 @@ public class TweetStreamHandler {
 
     private boolean YesCondition(String text){
         text.toLowerCase();
-        if(text.contains("#bastaunsi") || text.contains("#iovotosi") || text.contains(("#italiachedicesi")) || (text.contains(("#referendumcostituzionale")) && text.contains("#votosi"))){
+        if(text.contains("#bastaunsi") || text.contains("#iovotosi") || text.contains("#iodicosi") || text.contains(("#italiachedicesi")) || (text.contains(("#riformacostituzionale")) && text.contains("#dicosi")) || (text.contains(("#riformacostituzionale")) && text.contains("#votosi")) || (text.contains(("#referendumcostituzionale")) && text.contains("#dicosi")) || (text.contains(("#referendumcostituzionale")) && text.contains("#votosi"))){
             return true;
         }else{
             return false;
@@ -245,7 +251,7 @@ public class TweetStreamHandler {
     private void saveHashtags(Status tweet, int position){
         HashtagEntity[] thisHashtags = tweet.getHashtagEntities();
         for(HashtagEntity he : thisHashtags){
-            if(he.getText().compareToIgnoreCase("iovotono")!=0 && he.getText().compareToIgnoreCase("bastaunsi")!=0 && he.getText().compareToIgnoreCase("referendumcostituzionale")!=0 && he.getText().compareToIgnoreCase("votono")!=0 && he.getText().compareToIgnoreCase("votosi")!=0 && he.getText().compareToIgnoreCase("italiachedicesi")!=0 && he.getText().compareToIgnoreCase("iovotosi")!=0){
+            if(he.getText().compareToIgnoreCase("iovotono")!=0 && he.getText().compareToIgnoreCase("bastaunsi")!=0 && he.getText().compareToIgnoreCase("referendumcostituzionale")!=0 && he.getText().compareToIgnoreCase("votono")!=0 && he.getText().compareToIgnoreCase("votosi")!=0 && he.getText().compareToIgnoreCase("italiachedicesi")!=0 && he.getText().compareToIgnoreCase("iovotosi")!=0 && he.getText().compareToIgnoreCase("iodicosi")!=0 && he.getText().compareToIgnoreCase("iodicono")!= 0 && he.getText().compareToIgnoreCase("riformacostituzionale")!=0){
                 if(!(hashtags.containsKey(he.getText().toLowerCase()))){
                     hashtags.put(he.getText().toLowerCase(),new EntityStats(he.getText().toLowerCase()));
                 }
@@ -285,9 +291,10 @@ public class TweetStreamHandler {
         TWUS t;
         System.out.println("Starting loading data...");
         boolean first = true;
-        Calendar c1 = Calendar.getInstance();
-        Calendar cw = Calendar.getInstance();
-        Calendar cd = Calendar.getInstance();
+
+        Calendar ch = Calendar.getInstance();//Calendario limite orario
+        Calendar cw = Calendar.getInstance();//Calendario limite settimanale
+        Calendar cd = Calendar.getInstance();//Calendario limite giornaliero
         numHT[0] = numHT[1] = numHT[2] = (long)0;
         numHU[0] = numHU[1] = numHU[2] = (long)0;
         numDU[0] = numDU[1] = numDU[2] = (long)0;
@@ -331,14 +338,14 @@ public class TweetStreamHandler {
                 if(first){
                     firstStatus = tweet;
 
-                    c1.setTime(firstStatus.getCreatedAt());
+                    ch.setTime(firstStatus.getCreatedAt());
                     cw.setTime(firstStatus.getCreatedAt());
                     cd.setTime(firstStatus.getCreatedAt());
 
-                    c1.set(Calendar.MINUTE,0);
-                    c1.set(Calendar.SECOND,0);
-                    c1.set(Calendar.MILLISECOND,0);
-                    c1.add(Calendar.HOUR_OF_DAY,1);
+                    ch.set(Calendar.MINUTE,0);
+                    ch.set(Calendar.SECOND,0);
+                    ch.set(Calendar.MILLISECOND,0);
+                    ch.add(Calendar.HOUR_OF_DAY,1);
 
                     cd.set(Calendar.HOUR_OF_DAY,0);
                     cd.set(Calendar.MINUTE,0);
@@ -370,7 +377,7 @@ public class TweetStreamHandler {
                 saveMentions(tweet,thisPosition);
 
                 if(users.containsKey(tweet.getUser().getId())){
-                    if(!((c1.getTime().getTime() - users.get(tweet.getUser().getId()).getLastTimeTweet().getTime()) < HOUR_MILLIS)){
+                    if(!((ch.getTime().getTime() - users.get(tweet.getUser().getId()).getLastTimeTweet().getTime()) < HOUR_MILLIS)){
                         //L'utente non ha twittato nell'ultima ora
                         if(thisPosition>0){
                             numHU[0]++;
@@ -420,13 +427,14 @@ public class TweetStreamHandler {
 
 //                System.out.println("[numWU] - [0]: "+numWU[0]+" [1]: "+numWU[1]+" [2]: "+numWU[2]);
                 //HOUR
-                if(tweet.getCreatedAt().compareTo(c1.getTime()) > 0){
-                    statistics.add(new UsersStats(c1.getTime(),getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
-                    statisticsHour.add(new UsersStats(c1.getTime(),numHU[0],numHU[1],numHU[2]));
-                    hourTweets.add(new TweetsStats(c1.getTime(),numHT[0],numHT[1],numHT[2]));
+                if(tweet.getCreatedAt().compareTo(ch.getTime()) > 0){
+                    statistics.add(new UsersStats(ch.getTime(),getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
+                    statisticsHour.add(new UsersStats(ch.getTime(),numHU[0],numHU[1],numHU[2]));
+                    hourTweets.add(new TweetsStats(ch.getTime(),numHT[0],numHT[1],numHT[2]));
                     numHT[0] = numHT[1] = numHT[2] = (long)0;
-                    c1.add(Calendar.HOUR_OF_DAY,1);
-                    clastH.setTime(c1.getTime());
+                    numHU[0] = numHU[1] = numHU[2] = (long)0;
+                    ch.add(Calendar.HOUR_OF_DAY,1);
+                    clastH.setTime(ch.getTime());
                 }
                 //DAY
                 if(tweet.getCreatedAt().compareTo(cd.getTime()) > 0){
@@ -681,7 +689,9 @@ public class TweetStreamHandler {
 
             Iterator<UsersStats> itr;
 
-            if(type.compareToIgnoreCase("day")==0){
+            if(type.compareToIgnoreCase("hour")==0){
+                itr = statisticsHour.iterator();
+            }else if(type.compareToIgnoreCase("day")==0){
                 itr = statisticsDay.iterator();
             }else if(type.compareToIgnoreCase("week")==0){
                 itr = statisticsWeek.iterator();
@@ -718,40 +728,6 @@ public class TweetStreamHandler {
             e.printStackTrace();
         }
     }
-
-//    public void toJSONVotingWeekTrend(){
-//        try {
-//            Long yn = (long) 0;
-//            Long nn = (long) 0;
-//            Double yp = 0.0;
-//            TweetsStats last;
-//            Iterator<TweetsStats> itr = statistics.iterator();
-//
-//            System.out.println("Exporting votingTrend.json...");
-//
-//            StringBuilder jsondata = new StringBuilder("");
-//            jsondata.append("[");
-//
-//            while(itr.hasNext()){
-//                last = itr.next();
-//                yp = numToPerc(last.getYesUsers(),last.getNoUsers(),(long)0,1);
-//
-//                jsondata.append("{\"date\":").append(last.getDate().getTime()).append(",");
-//                jsondata.append("\"SI\":").append(String.format(Locale.US,"%1$.4f",yp)).append(",");
-//                jsondata.append("\"NO\":").append(String.format(Locale.US,"%1$.4f",(1-yp))).append("}");
-//                if(itr.hasNext()){
-//                    jsondata.append(",");
-//                }
-//            }
-//            jsondata.append("]");
-//            String filename = "exports/" + "votingTrend.json";
-//            new File("exports").mkdir();
-//            storeJSON(jsondata.toString(),filename);
-//            System.out.println("Successfully exported votingTrend.json!");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     public void toJSONpopularitySum(){
         try {
@@ -845,29 +821,10 @@ public class TweetStreamHandler {
             while(itrT.hasNext() && itrU.hasNext()){
                 lastT = itrT.next();
                 lastU = itrU.next();
-//                if(first){
-//                    beforeT = lastT;
-//                    beforeU = lastU;
-//                    first = false;
-//                }
-
-//                difYes = last.getYesUsers() - before.getYesUsers();
-//                difNo = last.getNoUsers() - before.getNoUsers();
-//                difOther = last.getOtherUsers() - before.getOtherUsers();
                 difYes = lastU.getYesUsers();
                 difNo = lastU.getNoUsers();
                 difOther = lastU.getOtherUsers();
-
-//                if(difYes<0){
-//                    difYes = before.getYesUsers();
-//                }else if(difNo<0){
-//                    difNo = before.getNoUsers();
-//                }else if(difOther<0){
-//                    difOther = before.getOtherUsers();
-//                }
-
                 pl.add(new PopVoto(lastT.numberOfTweets(),numToPerc(difYes,difNo,difOther,1),numToPerc(difYes,difNo,difOther,-1),numToPerc(difYes,difNo,difOther,0)));
-//                before = last;
             }
             spl = pl.stream().sorted(comparing(PopVoto::getTot)).collect(toList());
             Iterator<PopVoto> ipv = spl.iterator();
@@ -967,6 +924,7 @@ public class TweetStreamHandler {
     public void exportAllJSON(){
         this.toJSONVotingIntentions();
         this.toJSONVotingTrend("");
+        this.toJSONVotingTrend("Hour");
         this.toJSONVotingTrend("Day");
         this.toJSONVotingTrend("Week");
         this.toJSONpopularitySum();
@@ -998,6 +956,17 @@ public class TweetStreamHandler {
         }
         return rawJSON;
     }
+
+    public String toStringVotingHourTrend(){
+        String rawJSON = "";
+        try {
+            rawJSON = readFirstLine(new File("exports/votingHourTrend.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rawJSON;
+    }
+
     public String toStringVotingDayTrend(){
         String rawJSON = "";
         try {

@@ -49,7 +49,7 @@ public class AppController {
             tsh = new TweetStreamHandler();
             tsh.loadJSON();
             tsh.exportAllJSON();
-            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
+//            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
 //            tsh.loadStatistics();
             System.out.println("Starting TIMER");
             timer.schedule(hourlyTask, 0, 1000*60*60);
@@ -62,7 +62,7 @@ public class AppController {
     public RestMessage controller(@RequestParam(value="cmd", defaultValue="null") String name) {
         if(name.equalsIgnoreCase("start") && status == 0){
             System.out.println("Starting stream...");
-            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
+            tsh.startStream("#iovotono","#bastaunsi","#iodicono","#iodicosi","#iovotosi","#italiachedicesi","#referendumcostituzionale","#riformacostituzionale");
             status = 1;
             return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Running);
         }else if(name.equalsIgnoreCase("stop") && status == 1){
@@ -102,6 +102,11 @@ public class AppController {
     @RequestMapping(value="/referendum/voting_trend",produces="application/json")
     public @ResponseBody Json apiVT() {
         return new Json(tsh.toStringVotingTrend());
+    }
+    @CrossOrigin()
+    @RequestMapping(value="/referendum/voting_hour_trend",produces="application/json")
+    public @ResponseBody Json apiVHT() {
+        return new Json(tsh.toStringVotingHourTrend());
     }
     @CrossOrigin()
     @RequestMapping(value="/referendum/voting_day_trend",produces="application/json")
