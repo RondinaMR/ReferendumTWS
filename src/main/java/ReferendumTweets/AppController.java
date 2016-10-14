@@ -58,6 +58,7 @@ public class AppController {
         }
     }
 
+    @CrossOrigin
     @RequestMapping("/referendum")
     public RestMessage controller(@RequestParam(value="cmd", defaultValue="null") String name) {
         if(name.equalsIgnoreCase("start") && status == 0){
