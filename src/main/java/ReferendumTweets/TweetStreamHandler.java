@@ -49,12 +49,14 @@ public class TweetStreamHandler {
 
     public TweetStreamHandler() throws FileNotFoundException{
 
+
+
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true)
-                .setOAuthConsumerKey("Fve1cVc28evpjPFyR1KmXtjVj")
-                .setOAuthConsumerSecret("rxOinDLXPQFyOR4FwYCMTRo4KfKkm5jhEVHHgBsUxRPFceRdud")
-                .setOAuthAccessToken("96599210-qqvLv1EvrnIF5Ds29GqLoaLWh4i8EaATmYLq8vbEQ")
-                .setOAuthAccessTokenSecret("Yud7YJCxXvj5ZEO7Ex8gplsLavgEkbift5ZUbi8eesP25")
+                .setOAuthConsumerKey(propertyString("OAuthConsumerKey"))
+                .setOAuthConsumerSecret(propertyString("OAuthConsumerSecret"))
+                .setOAuthAccessToken(propertyString("OAuthAccessToken"))
+                .setOAuthAccessTokenSecret(propertyString("OAuthAccessTokenSecret"))
                 .setJSONStoreEnabled(true);
 
         twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
@@ -180,6 +182,19 @@ public class TweetStreamHandler {
                 ex.printStackTrace();
             }
         };
+    }
+
+    private String propertyString(String name){
+        //Funzione che recupera le keys
+        PropertiesManager config_properties = new PropertiesManager();
+        //config_properties.setPropValues();
+        String res = new String("");
+        try {
+            res=config_properties.getPropValues(name);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return res;
     }
 
     public void startStream(){
