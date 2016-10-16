@@ -49,12 +49,6 @@ public class PropertiesManager {
             // load a properties file
             prop.load(input);
 
-            // get the property value and print it out
-            System.out.println(prop.getProperty("OAuthConsumerKey"));
-            System.out.println(prop.getProperty("OAuthConsumerSecret"));
-            System.out.println(prop.getProperty("OAuthAccessToken"));
-            System.out.println(prop.getProperty("OAuthAccessTokenSecret"));
-
         } catch (IOException ex) {
             ex.printStackTrace();
         } finally {
@@ -74,6 +68,8 @@ public class PropertiesManager {
             return prop.getProperty("OAuthAccessToken");
         }else if(name.equals("OAuthAccessTokenSecret")){
             return prop.getProperty("OAuthAccessTokenSecret");
+        }else if(name.equals("SecureKey")){
+            return prop.getProperty("SecureKey");
         }else{
             return null;
         }

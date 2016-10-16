@@ -1,11 +1,13 @@
 package ReferendumTweets;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +23,10 @@ import org.springframework.boot.autoconfigure.*;
 @EnableAutoConfiguration
 public class AppController {
 
-    public enum State { Stopped, Running, Unknown}
+    public enum State { Stopped, Running, Unknown, Unauthorized}
+
+    PropertiesManager props = new PropertiesManager();
+    String keyServer = null;
 
     public static void main(String[] args) throws Exception {
         SpringApplication.run(AppController.class, args);
@@ -60,37 +65,48 @@ public class AppController {
 
     @CrossOrigin
     @RequestMapping("/referendum")
-    public RestMessage controller(@RequestParam(value="cmd", defaultValue="null") String name) {
-        if(name.equalsIgnoreCase("start") && status == 0){
-            System.out.println("Starting stream...");
-            tsh.startStream("#iovotono","#bastaunsi","#iodicono","#iodicosi","#iovotosi","#italiachedicesi","#referendumcostituzionale","#riformacostituzionale");
-            status = 1;
-            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Running);
-        }else if(name.equalsIgnoreCase("stop") && status == 1){
-            tsh.stopStream();
-            System.out.println("Stream stopped.");
-            status = 0;
-            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
-        }else if(name.equalsIgnoreCase("status")){
+    public RestMessage controller(
+            @RequestParam(value="cmd", defaultValue="null") String name,
+            @RequestParam(value="key", defaultValue="null") String key) {
+        try {
+            keyServer = props.getPropValues("SecureKey");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(name.equalsIgnoreCase("status")){
             if(status==0){
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
             }else{
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Running);
             }
-        }else if(name.equalsIgnoreCase("loadfiles") && status == 0){
-            tsh.loadJSON();
-            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
-        }else if(name.equalsIgnoreCase("loadstat") && status == 0){
-            tsh.loadStatistics();
-            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
-        }else if(name.equalsIgnoreCase("savestat") && status == 0){
-            tsh.toJSONstatistics();
-            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
-        }else if(name.equalsIgnoreCase("export") && status == 0){
-            tsh.exportAllJSON();
-            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+        }else if(key.equals(keyServer)){
+            if(name.equalsIgnoreCase("start") && status == 0){
+                System.out.println("Starting stream...");
+                tsh.startStream("#iovotono","#bastaunsi","#iodicono","#iodicosi","#iovotosi","#italiachedicesi","#referendumcostituzionale","#riformacostituzionale");
+                status = 1;
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Running);
+            }else if(name.equalsIgnoreCase("stop") && status == 1){
+                tsh.stopStream();
+                System.out.println("Stream stopped.");
+                status = 0;
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+            }else if(name.equalsIgnoreCase("loadfiles") && status == 0){
+                tsh.loadJSON();
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+            }else if(name.equalsIgnoreCase("loadstat") && status == 0){
+                tsh.loadStatistics();
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+            }else if(name.equalsIgnoreCase("savestat") && status == 0){
+                tsh.toJSONstatistics();
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+            }else if(name.equalsIgnoreCase("export") && status == 0){
+                tsh.exportAllJSON();
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+            }else{
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unknown);
+            }
         }else{
-            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unknown);
+            return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unauthorized);
         }
     }
 
