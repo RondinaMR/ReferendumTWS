@@ -1,7 +1,7 @@
 # ReferendumTWS
 Referendum's Tweets Observatory
 
-Quest'applicazione è una piattaforma per l'analisi del "sondaggistica" del feed di Twitter.
+Quest'applicazione è una piattaforma per l'analisi "sondaggistica" del feed di Twitter.
 
 Suffragium.it è la prima applicazione interamente dedicata al #ReferendumCostituzionale italiano del #4Dicembre.
 
