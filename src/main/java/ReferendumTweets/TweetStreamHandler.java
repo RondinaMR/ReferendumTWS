@@ -21,6 +21,7 @@ public class TweetStreamHandler {
         final long HOUR_MILLIS = 1000*60*60;
         final long DAY_MILLIS = HOUR_MILLIS * 24;
         final long WEEK_MILLIS = DAY_MILLIS * 7;
+        public boolean post_block = false;
         //Statistica oraria di tweets
         private LinkedList<TweetsStats> hourTweets = new LinkedList<>();
         //Statistica CUMULATIVA di utenti / h  <--> Storico
@@ -139,15 +140,19 @@ public class TweetStreamHandler {
                     numHT[0] = numHT[1] = numHT[2] = (long)0;
                     numHU[0] = numHU[1] = numHU[2] = (long)0;
                     clastH.add(Calendar.HOUR_OF_DAY,1);
-                    post("hourtweets");
-                    post("hourusers");
+                    if(!post_block){
+                        post("hourtweets");
+                        post("hourusers");
+                    }
                 }
                 //DAY
                 if(status.getCreatedAt().compareTo(clastD.getTime()) > 0){
                     statisticsDay.add(new UsersStats(clastD.getTime(),numDU[0],numDU[1],numDU[2]));
                     numDU[0] = numDU[1] = numDU[2] = (long) 0;
                     clastD.add(Calendar.DAY_OF_YEAR,1);
-                    post("dayusers");
+                    if(!post_block) {
+                        post("dayusers");
+                    }
                 }
                 //WEEK
                 if(status.getCreatedAt().compareTo(clastW.getTime()) > 0){

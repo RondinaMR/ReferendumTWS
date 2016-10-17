@@ -63,6 +63,16 @@ public class AppController {
         }
     }
 
+    private State thisState(){
+        if(status==0){
+            return State.Stopped;
+        }else if(status==1){
+            return State.Running;
+        }else{
+            return State.Unknown;
+        }
+    }
+
     @CrossOrigin
     @RequestMapping("/referendum")
     public RestMessage controller(
@@ -103,14 +113,16 @@ public class AppController {
                 tsh.exportAllJSON();
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
             }else if(name.equalsIgnoreCase("postabusp")){
-                tsh.post("absoluteusersperc");
-                if(status==0){
-                    return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
-                }else if(status==1){
-                    return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Running);
-                }else{
-                    return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unknown);
+                if(!tsh.post_block){
+                    tsh.post("absoluteusersperc");
                 }
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),thisState());
+            }else if(name.equalsIgnoreCase("block_post")){
+                tsh.post_block = false;
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),thisState());
+            }else if(name.equalsIgnoreCase("let_post")){
+                tsh.post_block = true;
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),thisState());
             }else{
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unknown);
             }
