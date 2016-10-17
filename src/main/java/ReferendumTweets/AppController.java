@@ -48,6 +48,22 @@ public class AppController {
             System.out.println("***** Exported data at " + System.currentTimeMillis() + " *****");
         }
     };
+    private TimerTask absoluteTask = new TimerTask() {
+        @Override
+        public void run () {
+            if(!tsh.post_block){
+                tsh.post("absoluteusersperc");
+            }
+        }
+    };
+    private TimerTask generalInfoTask = new TimerTask() {
+        @Override
+        public void run () {
+            if(!tsh.post_block){
+                tsh.post("globalinfo");
+            }
+        }
+    };
 
     private void init(){
         try {
@@ -58,6 +74,8 @@ public class AppController {
 //            tsh.loadStatistics();
             System.out.println("Starting TIMER");
             timer.schedule(hourlyTask, 0, 1000*60*60);
+            timer.schedule(absoluteTask, 1000*60*5,1000*60*60*8);
+            timer.schedule(generalInfoTask, 1000*60*30,1000*60*60*12);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

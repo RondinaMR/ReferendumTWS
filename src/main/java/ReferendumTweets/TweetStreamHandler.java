@@ -1068,7 +1068,7 @@ public class TweetStreamHandler {
 
     private String postHourUsers(){
         StringBuilder status = new StringBuilder("");
-        status.append("Nell'ultima ora hanno twittato ").append(statisticsHour.getLast().getTotUsers()).append(" utenti, di cui");
+        status.append("Nell'ultima ora hanno twittato ").append(statisticsHour.getLast().getTotUsers()).append(" utenti, di cui ");
         if(statisticsHour.getLast().getNoUsers()>statisticsHour.getLast().getYesUsers()){
             status.append(statisticsHour.getLast().getNoUsers()).append(" per il NO e ").append(statisticsHour.getLast().getYesUsers()).append(" per il SI");
         }else{
@@ -1087,6 +1087,15 @@ public class TweetStreamHandler {
             status.append(statisticsDay.getLast().getYesUsers()).append(" per il SI e ").append(statisticsDay.getLast().getNoUsers()).append(" per il NO");
         }
         status.append(" #ReferendumCostituzionale ").append("http://www.suffragium.it/");
+        return status.toString();
+    }
+
+    private String postGlobalInfo(){
+        StringBuilder status = new StringBuilder("");
+        status.append("Sono stati analizzati un totale di ")
+                .append(getNumberOfTweets()).append(" tweets e ")
+                .append(getNumberOfUsers()).append(" utenti ")
+                .append("#ReferendumCostituzionale #4dicembre http://www.suffragium.it/");
         return status.toString();
     }
 
@@ -1115,6 +1124,8 @@ public class TweetStreamHandler {
             newStatus = postDayUsers();
         }else if(name.equalsIgnoreCase("absoluteusersperc")){
             newStatus = postAbsoluteUsersP();
+        }else if(name.equalsIgnoreCase("globalinfo")){
+            newStatus = postGlobalInfo();
         }
         Status status = null;
         try {
