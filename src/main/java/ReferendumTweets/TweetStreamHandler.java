@@ -1039,9 +1039,9 @@ public class TweetStreamHandler {
         StringBuilder status = new StringBuilder("");
         status.append("Nell'ultima ora ");
         if(hourTweets.getLast().getNo()>hourTweets.getLast().getYes()){
-            status.append(hourTweets.getLast().getNo()).append(" tweets per il NO e ").append(hourTweets.getLast().getYes()).append(" tweets per il SI");
+            status.append(hourTweets.getLast().getNo()).append(" tweets per il NO e ").append(hourTweets.getLast().getYes()).append(" per il SI");
         }else{
-            status.append(hourTweets.getLast().getYes()).append(" tweets per il SI e").append(hourTweets.getLast().getNo()).append(" tweets per il NO");
+            status.append(hourTweets.getLast().getYes()).append(" tweets per il SI e").append(hourTweets.getLast().getNo()).append(" per il NO");
         }
 
         status.append(" #ReferendumCostituzionale ").append("http://www.suffragium.it/");
