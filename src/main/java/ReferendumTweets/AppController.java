@@ -102,6 +102,15 @@ public class AppController {
             }else if(name.equalsIgnoreCase("export") && status == 0){
                 tsh.exportAllJSON();
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+            }else if(name.equalsIgnoreCase("postabusp")){
+                tsh.post("absoluteusersperc");
+                if(status==0){
+                    return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+                }else if(status==1){
+                    return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Running);
+                }else{
+                    return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unknown);
+                }
             }else{
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unknown);
             }

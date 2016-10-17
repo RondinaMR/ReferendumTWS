@@ -47,9 +47,8 @@ public class TweetStreamHandler {
         private Long[] numWU = {(long) 0, (long) 0, (long) 0};//Number of Week's Users
 
 
+
     public TweetStreamHandler() throws FileNotFoundException{
-
-
 
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true)
@@ -140,12 +139,15 @@ public class TweetStreamHandler {
                     numHT[0] = numHT[1] = numHT[2] = (long)0;
                     numHU[0] = numHU[1] = numHU[2] = (long)0;
                     clastH.add(Calendar.HOUR_OF_DAY,1);
+                    post("hourtweets");
+                    post("hourusers");
                 }
                 //DAY
                 if(status.getCreatedAt().compareTo(clastD.getTime()) > 0){
                     statisticsDay.add(new UsersStats(clastD.getTime(),numDU[0],numDU[1],numDU[2]));
                     numDU[0] = numDU[1] = numDU[2] = (long) 0;
                     clastD.add(Calendar.DAY_OF_YEAR,1);
+                    post("dayusers");
                 }
                 //WEEK
                 if(status.getCreatedAt().compareTo(clastW.getTime()) > 0){
@@ -1026,6 +1028,96 @@ public class TweetStreamHandler {
             e.printStackTrace();
         }
         return rawJSON;
+    }
+
+    private String postHourTweets(){
+        StringBuilder status = new StringBuilder("");
+        status.append("Nell'ultima ora ");
+        if(hourTweets.getLast().getNo()>hourTweets.getLast().getYes()){
+            status.append(hourTweets.getLast().getNo()).append(" tweets per il NO e ").append(hourTweets.getLast().getYes()).append(" tweets per il SI");
+        }else{
+            status.append(hourTweets.getLast().getYes()).append(" tweets per il SI e").append(hourTweets.getLast().getNo()).append(" tweets per il NO");
+        }
+
+        status.append(" #ReferendumCostituzionale ").append("http://www.suffragium.it/");
+
+        return status.toString();
+    }
+
+    private String postAbsoluteUsersP(){
+        Double yp = numToPerc(statistics.getLast().getYesUsers(),statistics.getLast().getNoUsers(),(long)0,1);
+        Double np = 1 - yp;
+        yp = yp*100;
+        np = np*100;
+        StringBuilder status = new StringBuilder("");
+        status.append("Statistiche totali per il #ReferendumCostituzionale (senza indecisi): ");
+        if(np>yp){
+            status.append("NO ").append(String.format(Locale.US,"%1$.2f",np)).append("%, SI ").append(String.format(Locale.US,"%1$.2f",yp)).append("% ");
+        }else{
+            status.append("SI ").append(String.format(Locale.US,"%1$.2f",yp)).append("%, NO ").append(String.format(Locale.US,"%1$.2f",np)).append("% ");
+        }
+        status.append(" (Altro su ").append("http://www.suffragium.it/)");
+        System.out.println(status.toString());
+        return status.toString();
+    }
+
+    private String postHourUsers(){
+        StringBuilder status = new StringBuilder("");
+        status.append("Nell'ultima ora hanno twittato ").append(statisticsHour.getLast().getTotUsers()).append(" utenti, di cui");
+        if(statisticsHour.getLast().getNoUsers()>statisticsHour.getLast().getYesUsers()){
+            status.append(statisticsHour.getLast().getNoUsers()).append(" per il NO e ").append(statisticsHour.getLast().getYesUsers()).append(" per il SI");
+        }else{
+            status.append(statisticsHour.getLast().getYesUsers()).append(" per il SI e ").append(statisticsHour.getLast().getNoUsers()).append(" per il NO");
+        }
+        status.append(" #ReferendumCostituzionale ").append("http://www.suffragium.it/");
+        return status.toString();
+    }
+
+    private String postDayUsers(){
+        StringBuilder status = new StringBuilder("");
+        status.append("Oggi hanno twittato ").append(statisticsDay.getLast().getTotUsers()).append(" utenti, di cui");
+        if(statisticsDay.getLast().getNoUsers()>statisticsDay.getLast().getYesUsers()){
+            status.append(statisticsDay.getLast().getNoUsers()).append(" per il NO e ").append(statisticsDay.getLast().getYesUsers()).append(" per il SI");
+        }else{
+            status.append(statisticsDay.getLast().getYesUsers()).append(" per il SI e ").append(statisticsDay.getLast().getNoUsers()).append(" per il NO");
+        }
+        status.append(" #ReferendumCostituzionale ").append("http://www.suffragium.it/");
+        return status.toString();
+    }
+
+    public void post(String name){
+        String newStatus = null;
+        // The factory instance is re-useable and thread safe.
+
+        ConfigurationBuilder cc = new ConfigurationBuilder();
+        cc.setDebugEnabled(true)
+                .setOAuthConsumerKey(propertyString("OAuthConsumerKey"))
+                .setOAuthConsumerSecret(propertyString("OAuthConsumerSecret"))
+                .setOAuthAccessToken(propertyString("OAuthAccessToken"))
+                .setOAuthAccessTokenSecret(propertyString("OAuthAccessTokenSecret"))
+                .setJSONStoreEnabled(true);
+
+        TwitterFactory tf = new TwitterFactory(cc.build());
+        Twitter twitter = tf.getInstance();
+
+        //Twitter twitter = TwitterFactory.getSingleton();
+
+        if(name.equalsIgnoreCase("hourtweets")){
+            newStatus = postHourTweets();
+        }else if(name.equalsIgnoreCase("hourusers")){
+            newStatus = postHourUsers();
+        }else if(name.equalsIgnoreCase("dayusers")){
+            newStatus = postDayUsers();
+        }else if(name.equalsIgnoreCase("absoluteusersperc")){
+            newStatus = postAbsoluteUsersP();
+        }
+        Status status = null;
+        try {
+            status = twitter.updateStatus(newStatus);
+        } catch (TwitterException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Successfully updated the status to [" + status.getText() + "].");
     }
 
 }

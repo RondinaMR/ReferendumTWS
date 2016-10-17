@@ -64,4 +64,6 @@ public class UsersStats {
     public void addOtherUsers(Long otherUsers){
         this.otherUsers += otherUsers;
     }
+
+    public Long getTotUsers(){ return this.noUsers + this.yesUsers + this.otherUsers;}
 }
