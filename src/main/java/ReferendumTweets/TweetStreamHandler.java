@@ -1,6 +1,7 @@
 package ReferendumTweets;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import twitter4j.*;
 import twitter4j.conf.*;
 
@@ -47,6 +48,9 @@ public class TweetStreamHandler {
         private Long[] numDU = {(long) 0, (long) 0, (long) 0};//Number of Day's Users
         private Long[] numWU = {(long) 0, (long) 0, (long) 0};//Number of Week's Users
 
+
+//    @Autowired
+//    private TweetRepository TweetRepo;
 
 
     public TweetStreamHandler() throws FileNotFoundException{
@@ -447,6 +451,8 @@ public class TweetStreamHandler {
 
                 addUser(tweet);
 
+//                TweetRepo.save(new StatusTweet(tweet));
+
 //                System.out.println("[numWU] - [0]: "+numWU[0]+" [1]: "+numWU[1]+" [2]: "+numWU[2]);
                 //HOUR
                 if(tweet.getCreatedAt().compareTo(ch.getTime()) > 0){
@@ -482,6 +488,7 @@ public class TweetStreamHandler {
 
             }
             System.out.println("All data successfully loaded...");
+
             toJSONstatistics();
             System.out.println("...and exported!");
         } catch (IOException ioe) {
@@ -529,6 +536,7 @@ public class TweetStreamHandler {
             ObjectMapper mapper = new ObjectMapper();
 
             //JSON from file to Object
+            hourTweets = mapper.readValue(new File("exports/PopularityVote.json"), new TypeReference<LinkedList<TweetsStats>>(){});
             statistics = mapper.readValue(new File("exports/statistics.json"),  new TypeReference<LinkedList<TweetsStats>>(){});
             users = mapper.readValue(new File("exports/users.json"),  new TypeReference<Map<Long,TWUS>>(){});
             clastH.setTime(statistics.getLast().getDate());
@@ -674,6 +682,36 @@ public class TweetStreamHandler {
             new File("exports").mkdir();
             storeJSON(jsondata.toString(),filename);
             System.out.println("Successfully exported votingIntentions.json!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void toJSONVotingIntentionsWAmbiguos(){
+        try {
+            Long y = statistics.getLast().getYesUsers();
+            Long n = statistics.getLast().getNoUsers();
+            Long o = statistics.getLast().getOtherUsers();
+            Double yp = numToPerc(y,n,o,1);
+            Double np = numToPerc(y,n,o,-1);
+            Double op = numToPerc(y,n,o,0);
+            Map<Boolean,Double> votingIntentions = new TreeMap<>();
+            votingIntentions.put(true,yp);
+            votingIntentions.put(false,np);
+            String x = new String();
+
+            StringBuilder jsondata = new StringBuilder("");
+            jsondata.append("[");
+            jsondata.append("{\"Fazione\":\"SI\",\"Percentuale\":").append(String.format(Locale.US,"%1$.4f",yp)).append("}");
+            jsondata.append(",");
+            jsondata.append("{\"Fazione\":\"NO\",\"Percentuale\":").append(String.format(Locale.US,"%1$.4f",np)).append("}");
+            jsondata.append(",");
+            jsondata.append("{\"Fazione\":\"ALTRI\",\"Percentuale\":").append(String.format(Locale.US,"%1$.4f",op)).append("}");
+            jsondata.append("]");
+            String filename = "exports/" + "votingIntentionsWAmbiguos.json";
+            new File("exports").mkdir();
+            storeJSON(jsondata.toString(),filename);
+            System.out.println("Successfully exported votingIntentionsWAmbiguos.json!");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -945,6 +983,7 @@ public class TweetStreamHandler {
 
     public void exportAllJSON(){
         this.toJSONVotingIntentions();
+        this.toJSONVotingIntentionsWAmbiguos();
         this.toJSONVotingTrend("");
         this.toJSONVotingTrend("Hour");
         this.toJSONVotingTrend("Day");
@@ -1099,6 +1138,43 @@ public class TweetStreamHandler {
         return status.toString();
     }
 
+    private String postMentions(String party){
+        Optional<EntityStats> es;
+        StringBuilder status = new StringBuilder("");
+        status.append("L'utente più menzionato in assoluto dai sostenitori del ").append(party.toUpperCase())
+                .append(" è @");
+        if(party.equalsIgnoreCase("si")){
+            es = mentions.values().stream().sorted(comparing(EntityStats::getYesMentions)).findFirst();
+            status.append(es.get().getEntity())
+                    .append(" (").append(es.get().getYesMentions()).append(") ");
+        }else{
+            es = mentions.values().stream().sorted(comparing(EntityStats::getNoMentions)).findFirst();
+            status.append(es.get().getEntity())
+                    .append(" (").append(es.get().getNoMentions()).append(") ");
+        }
+        status
+                .append(" #ReferendumCostituzionale http://www.suffragium.it/");
+        return status.toString();
+    }
+
+    private String postHashtags(String party){
+        Optional<EntityStats> es;
+        StringBuilder status = new StringBuilder("");
+        status.append("L'hashtag più utilizzato in assoluto dai sostenitori del ").append(party.toUpperCase())
+                .append(" è #");
+        if(party.equalsIgnoreCase("si")){
+            es = hashtags.values().stream().sorted(comparing(EntityStats::getYesMentions)).findFirst();
+            status.append(es.get().getEntity())
+                    .append(" (").append(es.get().getYesMentions()).append(") ");
+        }else{
+            es = hashtags.values().stream().sorted(comparing(EntityStats::getNoMentions)).findFirst();
+            status.append(es.get().getEntity())
+                    .append(" (").append(es.get().getNoMentions()).append(") ");
+        }
+        status.append(" #ReferendumCostituzionale http://www.suffragium.it/");
+        return status.toString();
+    }
+
     public void post(String name){
         String newStatus = null;
         // The factory instance is re-useable and thread safe.
@@ -1126,6 +1202,14 @@ public class TweetStreamHandler {
             newStatus = postAbsoluteUsersP();
         }else if(name.equalsIgnoreCase("globalinfo")){
             newStatus = postGlobalInfo();
+        }else if(name.equalsIgnoreCase("postMentionsSI")){
+            newStatus = postMentions("si");
+        }else if(name.equalsIgnoreCase("postMentionsNO")){
+            newStatus = postMentions("no");
+        }else if(name.equalsIgnoreCase("postHashtagsSI")){
+            newStatus = postHashtags("si");
+        }else if(name.equalsIgnoreCase("postHashtagsNO")){
+            newStatus = postHashtags("no");
         }
         Status status = null;
         try {

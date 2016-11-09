@@ -8,6 +8,7 @@ import java.util.TimerTask;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.annotation.JsonAppend;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,7 @@ public class AppController {
     public static void main(String[] args) throws Exception {
         SpringApplication.run(AppController.class, args);
     }
+
 
     public AppController() {
         System.out.println("START INIT");
