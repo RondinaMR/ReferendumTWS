@@ -22,7 +22,7 @@ public class TweetStreamHandler {
         final long HOUR_MILLIS = 1000*60*60;
         final long DAY_MILLIS = HOUR_MILLIS * 24;
         final long WEEK_MILLIS = DAY_MILLIS * 7;
-        public boolean post_block = true;
+        public boolean post_block = false;
         //Statistica oraria di tweets
         private LinkedList<TweetsStats> hourTweets = new LinkedList<>();
         //Statistica CUMULATIVA di utenti / h  <--> Storico
