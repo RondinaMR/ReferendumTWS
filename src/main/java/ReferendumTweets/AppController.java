@@ -45,9 +45,9 @@ public class AppController {
     private TimerTask hourlyTask = new TimerTask() {
         @Override
         public void run () {
-            System.out.println("***** Starting exporting data at " + System.currentTimeMillis() + " *****");
-            tsh.exportAllJSON();
-            System.out.println("***** Exported data at " + System.currentTimeMillis() + " *****");
+//            System.out.println("***** Starting exporting data at " + System.currentTimeMillis() + " *****");
+//            tsh.exportAllJSON();
+//            System.out.println("***** Exported data at " + System.currentTimeMillis() + " *****");
         }
     };
     private TimerTask absoluteTask = new TimerTask() {
@@ -70,14 +70,15 @@ public class AppController {
     private void init(){
         try {
             tsh = new TweetStreamHandler();
-            tsh.loadJSON();
-            tsh.exportAllJSON();
+//            tsh.loadJSON();
+//            tsh.exportAllJSON();
 //            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
 //            tsh.loadStatistics();
-            System.out.println("Starting TIMER");
-            timer.schedule(hourlyTask, 0, 1000*60*60);
-            timer.schedule(absoluteTask, 1000*60*5,1000*60*60*8);
-            timer.schedule(generalInfoTask, 1000*60*30,1000*60*60*12);
+
+//            System.out.println("Starting TIMER");
+//            timer.schedule(hourlyTask, 0, 1000*60*60);
+//            timer.schedule(absoluteTask, 1000*60*5,1000*60*60*8);
+//            timer.schedule(generalInfoTask, 1000*60*30,1000*60*60*12);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
