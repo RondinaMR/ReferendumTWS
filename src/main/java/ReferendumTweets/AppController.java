@@ -70,8 +70,8 @@ public class AppController {
     private void init(){
         try {
             tsh = new TweetStreamHandler();
-            tsh.loadJSON();
-            tsh.exportAllJSON();
+//            tsh.loadJSON();
+//            tsh.exportAllJSON();
 //            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
 //            tsh.loadStatistics();
             System.out.println("Starting TIMER");
