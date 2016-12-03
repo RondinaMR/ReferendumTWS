@@ -22,7 +22,7 @@ public class TweetStreamHandler {
         final long HOUR_MILLIS = 1000*60*60;
         final long DAY_MILLIS = HOUR_MILLIS * 24;
         final long WEEK_MILLIS = DAY_MILLIS * 7;
-        public boolean post_block = false;
+        private boolean post_block = true;
         //Statistica oraria di tweets
         private LinkedList<TweetsStats> hourTweets = new LinkedList<>();
         //Statistica CUMULATIVA di utenti / h  <--> Storico
@@ -193,6 +193,13 @@ public class TweetStreamHandler {
                 ex.printStackTrace();
             }
         };
+    }
+
+    public void changeStatusLock(boolean lock){
+        post_block = lock;
+    }
+    public boolean getStatusLock(){
+        return post_block;
     }
 
     private String propertyString(String name){
@@ -1106,26 +1113,34 @@ public class TweetStreamHandler {
     }
 
     private String postHourUsers(){
+        Double yp = numToPerc(statisticsHour.getLast().getYesUsers(),statisticsHour.getLast().getNoUsers(),statisticsHour.getLast().getOtherUsers(),1);
+        Double np = 1-yp;
+        yp = yp*100;
+        np = np*100;
         StringBuilder status = new StringBuilder("");
-        status.append("Nell'ultima ora hanno twittato ").append(statisticsHour.getLast().getTotUsers()).append(" utenti, di cui ");
+        status.append("Nell'ultima ora hanno twittato ").append(statisticsHour.getLast().getTotUsers()).append(" utenti. [");
         if(statisticsHour.getLast().getNoUsers()>statisticsHour.getLast().getYesUsers()){
-            status.append(statisticsHour.getLast().getNoUsers()).append(" per il NO e ").append(statisticsHour.getLast().getYesUsers()).append(" per il SI");
+            status.append(String.format(Locale.US,"%1$.2f",np)).append("% NO e ").append(String.format(Locale.US,"%1$.2f",yp)).append("% SI");
         }else{
-            status.append(statisticsHour.getLast().getYesUsers()).append(" per il SI e ").append(statisticsHour.getLast().getNoUsers()).append(" per il NO");
+            status.append(String.format(Locale.US,"%1$.2f",yp)).append("% SI e ").append(String.format(Locale.US,"%1$.2f",np)).append("% NO");
         }
-        status.append(" #ReferendumCostituzionale ").append("http://www.suffragium.it/");
+        status.append("] #ReferendumCostituzionale ").append("http://www.suffragium.it/");
         return status.toString();
     }
 
     private String postDayUsers(){
+        Double yp = numToPerc(statisticsDay.getLast().getYesUsers(),statisticsDay.getLast().getNoUsers(),(long) 0,1);
+        Double np = 1 - yp;
+        yp = yp*100;
+        np = np*100;
         StringBuilder status = new StringBuilder("");
-        status.append("Oggi hanno twittato ").append(statisticsDay.getLast().getTotUsers()).append(" utenti, di cui");
+        status.append("Oggi hanno twittato ").append(statisticsDay.getLast().getTotUsers()).append(" utenti. [ ");
         if(statisticsDay.getLast().getNoUsers()>statisticsDay.getLast().getYesUsers()){
-            status.append(statisticsDay.getLast().getNoUsers()).append(" per il NO e ").append(statisticsDay.getLast().getYesUsers()).append(" per il SI");
+            status.append(String.format(Locale.US,"%1$.2f",np)).append("% NO e ").append(String.format(Locale.US,"%1$.2f",yp)).append("% SI");
         }else{
-            status.append(statisticsDay.getLast().getYesUsers()).append(" per il SI e ").append(statisticsDay.getLast().getNoUsers()).append(" per il NO");
+            status.append(String.format(Locale.US,"%1$.2f",yp)).append("% SI e ").append(String.format(Locale.US,"%1$.2f",np)).append("% NO");
         }
-        status.append(" #ReferendumCostituzionale ").append("http://www.suffragium.it/");
+        status.append("] #ReferendumCostituzionale ").append("http://www.suffragium.it/");
         return status.toString();
     }
 
