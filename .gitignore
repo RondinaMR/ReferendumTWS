@@ -66,3 +66,4 @@ target/site/
 target/surefire-reports/
 *.json
 /resources/
+statuses_after10/

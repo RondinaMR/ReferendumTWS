@@ -70,11 +70,12 @@ public class AppController {
     private void init(){
         try {
             tsh = new TweetStreamHandler();
-//            tsh.loadJSON();
+//            tsh.loadAllFromDB();
+//            tsh.loadStatistics();
+//            tsh.loadJSON(true);
 //            tsh.exportAllJSON();
 //            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
 //            tsh.loadStatistics();
-
 //            System.out.println("Starting TIMER");
 //            timer.schedule(hourlyTask, 0, 1000*60*60);
 //            timer.schedule(absoluteTask, 1000*60*5,1000*60*60*8);
@@ -122,7 +123,13 @@ public class AppController {
                 status = 0;
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
             }else if(name.equalsIgnoreCase("loadfiles") && status == 0){
-                tsh.loadJSON();
+                tsh.loadJSON(false);
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+            }else if(name.equalsIgnoreCase("loadfilesDB") && status == 0){
+                tsh.loadJSON(true);
+                return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
+            }else if(name.equalsIgnoreCase("loadFromDB") && status == 0){
+                tsh.loadAllFromDB();
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
             }else if(name.equalsIgnoreCase("loadstat") && status == 0){
                 tsh.loadStatistics();

@@ -24,6 +24,7 @@ public class TWUS {
     private boolean politicalPosition;
     private boolean ambiguous = false;
     private boolean positionSetted = false;
+    private int balance = 0;
 
     public TWUS() {
     }
@@ -100,6 +101,8 @@ public class TWUS {
         ambiguous = true;
     }
 
+    public void notAmbiguous(){ambiguous = false;}
+
     public boolean isAmbiguous(){
         return ambiguous;
     }
@@ -113,6 +116,10 @@ public class TWUS {
     public void setLastTimeTweet(Date lastTweet) {
         this.lastTweet = lastTweet;
     }
+
+    public int addBalance(){this.balance++;return this.balance;}
+    public int subBalance(){this.balance--;return this.balance;}
+    public int getBalance(){return this.balance;}
 
     @Override
     public String toString(){
