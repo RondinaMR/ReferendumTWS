@@ -1,6 +1,7 @@
 package ReferendumTweets;
 
 import java.util.Date;
+import java.util.LinkedHashSet;
 
 /**
  * Created by marco on 17/09/2016.
@@ -66,4 +67,5 @@ public class UsersStats {
     }
 
     public Long getTotUsers(){ return this.noUsers + this.yesUsers + this.otherUsers;}
+
 }

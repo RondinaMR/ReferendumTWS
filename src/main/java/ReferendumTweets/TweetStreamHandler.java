@@ -6,6 +6,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import org.mongojack.DBCursor;
+import org.mongojack.DBSort;
 import org.mongojack.JacksonDBCollection;
 import org.mongojack.WriteResult;
 import twitter4j.*;
@@ -29,7 +30,7 @@ public class TweetStreamHandler {
         final long HOUR_MILLIS = 1000*60*60;
         final long DAY_MILLIS = HOUR_MILLIS * 24;
         final long WEEK_MILLIS = DAY_MILLIS * 7;
-        public boolean post_block = false;
+        private boolean post_block = true;
         //Statistica oraria di tweets
         private LinkedList<TweetsStats> hourTweets = new LinkedList<>();
         //Statistica CUMULATIVA di utenti / h  <--> Storico
@@ -49,6 +50,11 @@ public class TweetStreamHandler {
         private Calendar clastH = Calendar.getInstance();
         private Calendar clastD = Calendar.getInstance();
         private Calendar clastW = Calendar.getInstance();
+        Calendar dateStart = Calendar.getInstance();
+
+        Calendar ch = Calendar.getInstance();//Calendario limite orario
+        Calendar cw = Calendar.getInstance();//Calendario limite settimanale
+        Calendar cd = Calendar.getInstance();//Calendario limite giornaliero
 
         private TmpStats numHourTweets = new TmpStats();
         private TmpStats numHourUsers = new TmpStats();
@@ -57,10 +63,7 @@ public class TweetStreamHandler {
 
         private DB db = initLocalhostDB();
 
-//        private Long[] numHT = {(long) 0, (long) 0, (long) 0};//Number of Hour's Tweets (tmp)
-//        private Long[] numHU = {(long) 0, (long) 0, (long) 0};//Number of Hour's Users (tmp)
-//        private Long[] numDU = {(long) 0, (long) 0, (long) 0};//Number of Day's Users (tmp)
-//        private Long[] numWU = {(long) 0, (long) 0, (long) 0};//Number of Week's Users (tmp)
+        private boolean debug_print = false;
 
 
     public TweetStreamHandler() throws FileNotFoundException{
@@ -77,10 +80,10 @@ public class TweetStreamHandler {
 
         listener = new StatusListener() {
             @Override
-            public void onStatus(Status status) {
+            public void onStatus(Status tweet) {
 
                 TweetsStats tmpstat;
-                TWUS t;
+                TWST status = new TWST(tweet);
                 int thisPosition;
                 Calendar now = Calendar.getInstance();
                 if(now.getTimeInMillis() - clastH.getTimeInMillis() > HOUR_MILLIS){
@@ -113,133 +116,91 @@ public class TweetStreamHandler {
                     clastW.add(Calendar.WEEK_OF_YEAR,1);
                 }
 
-                thisPosition = scanTweet(new TWST(status));
-
-                positionCounterUpdate(numHourTweets,thisPosition);
-
-//                if(thisPosition>0){
-//                    numHourTweets.addYes();
-////                    numHT[0]++;
-//                }else if(thisPosition<0){
-//                    numHourTweets.addNo();
-////                    numHT[1]++;
-//                }else{
-//                    numHourTweets.addOther();
-////                    numHT[2]++;
-//                }
-
-                if(users.containsKey(status.getUser().getId())){
-                    if(!((clastH.getTime().getTime() - users.get(status.getUser().getId()).getLastTimeTweet().getTime()) < HOUR_MILLIS)){
-                        //L'utente non ha twittato nell'ultima ora
-                        positionCounterUpdate(numHourUsers,thisPosition);
-//                        if(thisPosition>0){
-//                            numHourUsers.addYes();
-////                            numHU[0]++;
-//                        }else if(thisPosition<0){
-//                            numHourUsers.addNo();
-////                            numHU[1]++;
-//                        }else{
-//                            numHourUsers.addOther();
-////                            numHU[2]++;
-//                        }
-                        if(!((clastD.getTime().getTime() - users.get(status.getUser().getId()).getLastTimeTweet().getTime()) < DAY_MILLIS)){
-                            //L'utente non ha twittato nell'ultimo giorno
-                            positionCounterUpdate(numDayUsers,thisPosition);
-//                            if(thisPosition>0){
-//                                numDayUsers.addYes();
-////                                numDU[0]++;
-//                            }else if(thisPosition<0){
-//                                numDayUsers.addNo();
-////                                numDU[1]++;
-//                            }else{
-//                                numDayUsers.addOther();
-////                                numDU[2]++;
-//                            }
-                            if(!((clastW.getTime().getTime() - users.get(status.getUser().getId()).getLastTimeTweet().getTime()) < WEEK_MILLIS)){
-                                //L'utente non ha twittato nell'ultima settimana
-                                positionCounterUpdate(numWeekUsers,thisPosition);
-//                                if(thisPosition>0){
-//                                    numWeekUsers.addYes();
-////                                    numWU[0]++;
-//                                }else if(thisPosition<0){
-//                                    numWeekUsers.addNo();
-////                                    numWU[1]++;
-//                                }else{
-//                                    numWeekUsers.addOther();
-////                                    numWU[2]++;
-//                                }
-                            }
-                        }
-                    }
-                }else{
-                    if(thisPosition>0){
-                        numHourUsers.addYes();
-                        numDayUsers.addYes();
-                        numWeekUsers.addYes();
-//                        numHU[0]++;
-//                        numDU[0]++;
-//                        numWU[0]++;
-                    }else if(thisPosition<0){
-                        numHourUsers.addNo();
-                        numDayUsers.addNo();
-                        numWeekUsers.addNo();
-//                        numHU[1]++;
-//                        numDU[1]++;
-//                        numWU[1]++;
-                    }else{
-                        numHourUsers.addOther();
-                        numDayUsers.addOther();
-                        numWeekUsers.addOther();
-//                        numHU[2]++;
-//                        numDU[2]++;
-//                        numWU[2]++;
-                    }
-                }
+                thisPosition = scanTweet(status);
 
                 addUser(status);
 
+                positionCounterUpdate(numHourTweets,thisPosition);
+
+                saveHashtags(status,thisPosition);
+                saveMentions(status,thisPosition);
+
+                updateUserCounters(status, thisPosition);
+//                if(users.containsKey(status.getUser().getId())){
+//                    if(!((clastH.getTime().getTime() - users.get(status.getUser().getId()).getLastTimeTweet().getTime()) < HOUR_MILLIS)){
+//                        //L'utente non ha twittato nell'ultima ora
+//                        positionCounterUpdate(numHourUsers,thisPosition);
+//                        if(!((clastD.getTime().getTime() - users.get(status.getUser().getId()).getLastTimeTweet().getTime()) < DAY_MILLIS)){
+//                            //L'utente non ha twittato nell'ultimo giorno
+//                            positionCounterUpdate(numDayUsers,thisPosition);
+//                            if(!((clastW.getTime().getTime() - users.get(status.getUser().getId()).getLastTimeTweet().getTime()) < WEEK_MILLIS)){
+//                                //L'utente non ha twittato nell'ultima settimana
+//                                positionCounterUpdate(numWeekUsers,thisPosition);
+//                            }
+//                        }
+//                    }
+//                }else{
+//                    if(thisPosition>0){
+//                        numHourUsers.addYes();
+//                        numDayUsers.addYes();
+//                        numWeekUsers.addYes();
+//                    }else if(thisPosition<0){
+//                        numHourUsers.addNo();
+//                        numDayUsers.addNo();
+//                        numWeekUsers.addNo();
+//                    }else{
+//                        numHourUsers.addOther();
+//                        numDayUsers.addOther();
+//                        numWeekUsers.addOther();
+//                    }
+//                }
+
+                if(debug_print){
+                    System.out.println("[ID] "+status.getID() + " [UID] " + status.getUser().getID() + " [CAT] " + status.getCreatedAt());
+                    System.out.println("\t[POS] " + thisPosition);
+                    System.out.println("\t[NHT] "+numHourTweets.toString());
+                    System.out.println("\t[NHU] "+numHourUsers.toString());
+                    System.out.println("\t[NDU] "+numDayUsers.toString());
+                    System.out.println("\t[NWU] "+numWeekUsers.toString());
+                }
+
 //                saveStatusToJSON(status);
-                loadTweetOnMongoDB(new TWST(status),db);
+                loadTweetOnMongoDB(status,db);
 
                 System.out.println("THIS: " + status.getCreatedAt() + " / LOAD AT: " + clastH.getTime());
 
-                //HOUR
-                if(status.getCreatedAt().compareTo(clastH.getTime()) > 0){
-                    statistics.add(new UsersStats(clastH.getTime(),getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
-                    statisticsHour.add(new UsersStats(clastH.getTime(),numHourUsers.getYes(),numHourUsers.getNo(),numHourUsers.getOther()));
-                    hourTweets.add(new TweetsStats(clastH.getTime(),numHourTweets.getYes(),numHourTweets.getNo(),numHourTweets.getOther()));
+                checkCalendersLimit(status,false);
 
-//                    statisticsHour.add(new UsersStats(clastH.getTime(),numHU[0],numHU[1],numHU[2]));
-//                    hourTweets.add(new TweetsStats(clastH.getTime(),numHT[0],numHT[1],numHT[2]));
-                    numHourTweets.clearAll();
-                    numHourUsers.clearAll();
-//                    numHT[0] = numHT[1] = numHT[2] = (long)0;
-//                    numHU[0] = numHU[1] = numHU[2] = (long)0;
-                    clastH.add(Calendar.HOUR_OF_DAY,1);
-                    if(!post_block){
-                        post("hour");
-                        //post("hourtweets");
-                        //post("hourusers");
-                    }
-                }
-                //DAY
-                if(status.getCreatedAt().compareTo(clastD.getTime()) > 0){
-                    statisticsDay.add(new UsersStats(clastD.getTime(),numDayUsers.getYes(),numDayUsers.getNo(),numDayUsers.getOther()));
-                    numDayUsers.clearAll();
-//                    numDU[0] = numDU[1] = numDU[2] = (long) 0;
-                    clastD.add(Calendar.DAY_OF_YEAR,1);
-                    if(!post_block) {
-                        post("dayusers");
-                    }
-                }
-                //WEEK
-                if(status.getCreatedAt().compareTo(clastW.getTime()) > 0){
-                    statisticsWeek.add(new UsersStats(clastW.getTime(),numWeekUsers.getYes(),numWeekUsers.getNo(),numWeekUsers.getOther()));
-//                    statisticsWeek.add(new UsersStats(clastW.getTime(),numWU[0],numWU[1],numWU[2]));
-                    numWeekUsers.clearAll();
-//                    numWU[0] = numWU[1] = numWU[2] = (long) 0;
-                    clastW.add(Calendar.WEEK_OF_YEAR,1);
-                }
+//                //HOUR
+//                if(status.getCreatedAt().compareTo(clastH.getTime()) > 0){
+//                    statistics.add(new UsersStats(clastH.getTime(),getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
+//                    statisticsHour.add(new UsersStats(clastH.getTime(),numHourUsers.getYes(),numHourUsers.getNo(),numHourUsers.getOther()));
+//                    hourTweets.add(new TweetsStats(clastH.getTime(),numHourTweets.getYes(),numHourTweets.getNo(),numHourTweets.getOther()));
+//
+//                    numHourTweets.clearAll();
+//                    numHourUsers.clearAll();
+//                    clastH.add(Calendar.HOUR_OF_DAY,1);
+//                    if(!post_block){
+//                        post("hour");
+//                        //post("hourtweets");
+//                        //post("hourusers");
+//                    }
+//                }
+//                //DAY
+//                if(status.getCreatedAt().compareTo(clastD.getTime()) > 0){
+//                    statisticsDay.add(new UsersStats(clastD.getTime(),numDayUsers.getYes(),numDayUsers.getNo(),numDayUsers.getOther()));
+//                    numDayUsers.clearAll();
+//                    clastD.add(Calendar.DAY_OF_YEAR,1);
+//                    if(!post_block) {
+//                        post("dayusers");
+//                    }
+//                }
+//                //WEEK
+//                if(status.getCreatedAt().compareTo(clastW.getTime()) > 0){
+//                    statisticsWeek.add(new UsersStats(clastW.getTime(),numWeekUsers.getYes(),numWeekUsers.getNo(),numWeekUsers.getOther()));
+//                    numWeekUsers.clearAll();
+//                    clastW.add(Calendar.WEEK_OF_YEAR,1);
+//                }
 
                 System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText() + " (" + status.getCreatedAt() + ") <" + status.getPlace() + " / " + status.getUser().getLocation() + ">");
             }
@@ -269,6 +230,14 @@ public class TweetStreamHandler {
                 ex.printStackTrace();
             }
         };
+    }
+
+    public void changeStatusLock(boolean lock){
+        post_block = lock;
+    }
+
+    public boolean getStatusLock(){
+        return post_block;
     }
 
     private String propertyString(String name){
@@ -312,13 +281,13 @@ public class TweetStreamHandler {
         System.out.println("Stream shutted down");
     }
 
-    private TWUS addUser(Status tweet){
+    private TWUS addUser(TWST tweet){
 //        TWUS t = new TWUS(tweet.getUser().getId(),tweet.getUser().getScreenName(),tweet.getUser().getName(),tweet.getUser().getLocation());
-        TWUS t = new TWUS(tweet.getUser().getId(),tweet.getUser().getLocation(),tweet.getCreatedAt());
-        if(!users.containsKey(tweet.getUser().getId())){
-            users.put(tweet.getUser().getId(), t);
+        TWUS t = new TWUS(tweet.getUser().getID(),tweet.getUser().getLocation());
+        if(!users.containsKey(tweet.getUser().getID())){
+            users.put(tweet.getUser().getID(), t);
         }
-        TWUS user = users.get(tweet.getUser().getId());
+        TWUS user = users.get(tweet.getUser().getID());
 
         String text = tweet.getText().toLowerCase();
         if(NoCondition(text)){
@@ -332,7 +301,7 @@ public class TweetStreamHandler {
             if((user.getBalance()<2) && (!user.isPoliticalPosition()) && (!user.isAmbiguous())) user.setAmbiguous();
             if((user.getBalance()>1) && (user.isPoliticalPosition()) && (user.isAmbiguous())) user.notAmbiguous();
         }
-        user.setLastTimeTweet(tweet.getCreatedAt());
+//        user.setLastTimeTweet(tweet.getCreatedAt());
         return user;
     }
 
@@ -355,8 +324,8 @@ public class TweetStreamHandler {
     }
 
     private void saveHashtags(TWST tweet, int position){
-        HashtagEntity[] thisHashtags = tweet.getHashtagEntities();
-        for(HashtagEntity he : thisHashtags){
+        Entity[] thisHashtags = tweet.getHashtagEntities();
+        for(Entity he : thisHashtags){
             if(he.getText().compareToIgnoreCase("iovotono")!=0 && he.getText().compareToIgnoreCase("bastaunsi")!=0 && he.getText().compareToIgnoreCase("referendumcostituzionale")!=0 && he.getText().compareToIgnoreCase("votono")!=0 && he.getText().compareToIgnoreCase("votosi")!=0 && he.getText().compareToIgnoreCase("italiachedicesi")!=0 && he.getText().compareToIgnoreCase("iovotosi")!=0 && he.getText().compareToIgnoreCase("iodicosi")!=0 && he.getText().compareToIgnoreCase("iodicono")!= 0 && he.getText().compareToIgnoreCase("riformacostituzionale")!=0){
                 if(!(hashtags.containsKey(he.getText().toLowerCase()))){
                     hashtags.put(he.getText().toLowerCase(),new EntityStats(he.getText().toLowerCase()));
@@ -373,8 +342,8 @@ public class TweetStreamHandler {
     }
 
     private void saveMentions(TWST tweet, int position){
-        UserMentionEntity[] thisMentions = tweet.getUserMentionEntities();
-        for(UserMentionEntity me : thisMentions){
+        Entity[] thisMentions = tweet.getUserMentionEntities();
+        for(Entity me : thisMentions){
             if(!(mentions.containsKey(me.getText()))){
                 mentions.put(me.getText(),new EntityStats(me.getText().toLowerCase()));
             }
@@ -394,17 +363,6 @@ public class TweetStreamHandler {
         JacksonDBCollection<TWST,Long> coll = JacksonDBCollection.wrap(collectionTweets,TWST.class,Long.class);
         //Inserimento del documento
         WriteResult<TWST, Long> result = coll.insert(tweet);
-
-//        ObjectMapper mapper = new ObjectMapper();
-//        String jsondata = null;
-//        try {
-//            jsondata = mapper.writeValueAsString(new TWST(tweet));
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//        }
-//        // inserimento del documento
-//        DBObject jsonDocument = (DBObject) JSON.parse(jsondata);
-//        db.getCollection("tweets").insert(jsonDocument);
     }
 
     private void clearAllCollections(){
@@ -436,30 +394,22 @@ public class TweetStreamHandler {
                 numHourUsers.clearAll();
                 numDayUsers.clearAll();
                 numWeekUsers.clearAll();
-//                numHT[0] = numHT[1] = numHT[2] = (long)0;
-//                numHU[0] = numHU[1] = numHU[2] = (long)0;
-//                numDU[0] = numDU[1] = numDU[2] = (long)0;
-//                numWU[0] = numWU[1] = numWU[2] = (long)0;
                 break;
             //Azzera Tweet orari
             case 1:
                 numHourTweets.clearAll();
-//                numHT[0] = numHT[1] = numHT[2] = (long)0;
                 break;
             //Azzera Utenti orari
             case 2:
                 numHourTweets.clearAll();
-//                numHU[0] = numHU[1] = numHU[2] = (long)0;
                 break;
             //Azzera Utenti giornalieri
             case 3:
                 numDayUsers.clearAll();
-//                numDU[0] = numDU[1] = numDU[2] = (long)0;
                 break;
             //Azzera Utenti settimanali
             case 4:
                 numWeekUsers.clearAll();
-//                numWU[0] = numWU[1] = numWU[2] = (long)0;
                 break;
         }
     }
@@ -474,241 +424,89 @@ public class TweetStreamHandler {
         }
     }
 
-    public void loadAllFromDB(){
-//        db.getCollection("tweets").find();
-//        ObjectMapper mapper = new ObjectMapper();
-        DBCollection collectionTweets = db.getCollection("tweets");
-        JacksonDBCollection<TWST,Long> coll = JacksonDBCollection.wrap(collectionTweets,TWST.class,Long.class);
-        DBObject statusJson;
-        TWST status;
-//        System.out.println("Collection tweets selected successfully");
-//        List<BlogPost> posts = coll.find().sort(DBSort.desc("date")).toArray();
-        DBCursor<TWST> cursor = coll.find();
-        int i = 0;
-        boolean first = true;
-        while (cursor.hasNext()) {
-//            statusJson = cursor.next();
-            status = cursor.next();
+    public void updateUserCounters(TWST status, int thisPosition){
 
-            loadSingleStatus(status,first,false);
-            first=false;
-            i++;
-
-            //JSON from file to Object
-//            try {
-//                status = mapper.readValue(statusJson.toString(),  new TypeReference<TWST>(){});
-//                System.out.println(status);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+        if(!numHourUsers.containUser(status.getUser().getID())){
+            //L'utente non ha twittato nell'ultima ora
+            positionCounterUpdate(numHourUsers,thisPosition);
+            numHourUsers.addUser(status.getUser().getID());
+            if(!numDayUsers.containUser(status.getUser().getID())){
+                //L'utente non ha twittato nell'ultimo giorno
+                positionCounterUpdate(numDayUsers,thisPosition);
+                numDayUsers.addUser(status.getUser().getID());
+                if(!numWeekUsers.containUser(status.getUser().getID())){
+                    //L'utente non ha twittato nell'ultima settimana
+                    positionCounterUpdate(numWeekUsers,thisPosition);
+                    numWeekUsers.addUser(status.getUser().getID());
+                }
+            }
         }
+
+//        if(users.containsKey(status.getUser().getID())){
+//            System.out.println("\t\t[USERS_CONTAINS_KEY] YES");
+//            System.out.println("\t\t[CH] " + ch.getTime().toString() + " [LTT] " + users.get(status.getUser().getID()).getLastTimeTweet().toString());
+//            System.out.println("\t\t[HM] " + HOUR_MILLIS + " [VAL] " + (ch.getTime().getTime() - users.get(status.getUser().getID()).getLastTimeTweet().getTime()));
+//            if(!((ch.getTime().getTime() - users.get(status.getUser().getID()).getLastTimeTweet().getTime()) < HOUR_MILLIS)){
+//                //L'utente non ha twittato nell'ultima ora
+//                positionCounterUpdate(numHourUsers,thisPosition);
+//                System.out.println("\t\t\t[HOUR] YES");
+//                if(!((cd.getTime().getTime() - users.get(status.getUser().getID()).getLastTimeTweet().getTime()) < DAY_MILLIS)){
+//                    //L'utente non ha twittato nell'ultimo giorno
+//                    positionCounterUpdate(numDayUsers,thisPosition);
+//                    System.out.println("\t\t\t[DAY] YES");
+//                    if(!((cw.getTime().getTime() - users.get(status.getUser().getID()).getLastTimeTweet().getTime()) < WEEK_MILLIS)){
+//                        //L'utente non ha twittato nell'ultima settimana
+//                        positionCounterUpdate(numWeekUsers,thisPosition);
+//                        System.out.println("\t\t\t[WEEK] YES");
+//                    }
+//                }
+//            }
+//        }else{
+//            System.out.println("\t\t[USERS_CONTAINS_KEY] NOT");
+//            positionCounterUpdate(numHourUsers,thisPosition);
+//            positionCounterUpdate(numDayUsers,thisPosition);
+//            positionCounterUpdate(numWeekUsers,thisPosition);
+//        }
     }
 
-    private void loadSingleStatus(TWST tweet,boolean first,boolean loadDB){
-        long n=0;
-        TWUS t;
-        TWST firstStatus;
-        //Fisso una data di partenza per la lettura dei file (necessaria per la sincronizzazione DB locale/server
-        Calendar dateStart = Calendar.getInstance();
-        dateStart.set(2016,10,16,0,0);
-        System.out.println("Starting loading data...");
-
-        Calendar ch = Calendar.getInstance();//Calendario limite orario
-        Calendar cw = Calendar.getInstance();//Calendario limite settimanale
-        Calendar cd = Calendar.getInstance();//Calendario limite giornaliero
-        zeroCounters(0);
-
-        Integer thisPosition;
-
-
-        if(tweet.getCreatedAt().compareTo(dateStart.getTime())<0){
-            return;
-        }
-//                System.out.println(tweet.toString());
-
-        if(first){
-            firstStatus = tweet;
-
-            System.out.println("CLASTW: " + clastW.getTime().toString() + " / " + "FIRST: " + firstStatus.getCreatedAt().toString());
-            //Se sono state caricate le statistiche, sistemo il tempo, altrimenti no
-            if(clastW.getTimeInMillis()<firstStatus.getCreatedAt().getTime())
-            {
-                System.out.println("Data correction for Statistics");
-                if(firstStatus.getCreatedAt().getTime() - clastW.getTimeInMillis() < HOUR_MILLIS){
-                    ch.setTime(clastW.getTime());
-                }else{
-                    ch.setTime(firstStatus.getCreatedAt());
-                }
-
-                if(firstStatus.getCreatedAt().getTime() - clastW.getTimeInMillis() < DAY_MILLIS){
-                    cd.setTime(clastW.getTime());
-                }else{
-                    cd.setTime(firstStatus.getCreatedAt());
-                }
-
-                if(firstStatus.getCreatedAt().getTime() - clastW.getTimeInMillis() < WEEK_MILLIS){
-                    cw.setTime(clastW.getTime());
-                }else{
-                    cw.setTime(firstStatus.getCreatedAt());
-                }
-            }else{
-                ch.setTime(firstStatus.getCreatedAt());
-                cd.setTime(firstStatus.getCreatedAt());
-                cw.setTime(firstStatus.getCreatedAt());
-            }
-
-            //Aggiusto l'orario del limite per il salvataggio dei nuovi tweet
-            System.out.println("[CH] " + ch.getTime());
-            ch.set(Calendar.MINUTE,0);
-            ch.set(Calendar.SECOND,0);
-            ch.set(Calendar.MILLISECOND,0);
-            ch.add(Calendar.HOUR_OF_DAY,1);
-            System.out.println("[CH] " + ch.getTime());
-            System.out.println("[CD] " + cd.getTime());
-            cd.set(Calendar.HOUR_OF_DAY,0);
-            cd.set(Calendar.MINUTE,0);
-            cd.set(Calendar.SECOND,0);
-            cd.set(Calendar.MILLISECOND,0);
-            cd.add(Calendar.DAY_OF_YEAR,1);
-            System.out.println("[CD] " + cd.getTime());
-            System.out.println("[CW] " + cw.getTime());
-            cw.set(Calendar.DAY_OF_WEEK,Calendar.SUNDAY);
-            cw.set(Calendar.HOUR_OF_DAY,0);
-            cw.set(Calendar.MINUTE,0);
-            cw.set(Calendar.SECOND,0);
-            cw.set(Calendar.MILLISECOND,0);
-            cw.add(Calendar.DAY_OF_YEAR,1);
-//                    cw.add(Calendar.DAY_OF_YEAR,1);
-//                    cw.add(Calendar.WEEK_OF_YEAR,1);
-            System.out.println("[CW] " + cw.getTime());
-            System.out.println("CH: " + ch.getTime().toString() + " / " + "CD: " + cd.getTime().toString() + " / " + "CW: " + cw.getTime().toString());
-        }
-
-        if(loadDB){
-            loadTweetOnMongoDB(tweet,db);
-        }
-
-        thisPosition = scanTweet(tweet);
-
-        positionCounterUpdate(numHourTweets,thisPosition);
-//
-//        if(thisPosition>0){
-//            numHourTweets.addYes();
-////                    numHT[0]++;
-//        }else if(thisPosition<0){
-//            numHourTweets.addNo();
-////                    numHT[1]++;
-//        }else{
-//            numHourTweets.addOther();
-////                    numHT[2]++;
-//        }
-
-        saveHashtags(tweet,thisPosition);
-        saveMentions(tweet,thisPosition);
-
-        if(users.containsKey(tweet.getUser().getId())){
-            if(!((ch.getTime().getTime() - users.get(tweet.getUser().getId()).getLastTimeTweet().getTime()) < HOUR_MILLIS)){
-                //L'utente non ha twittato nell'ultima ora
-                positionCounterUpdate(numHourUsers,thisPosition);
-//                if(thisPosition>0){
-//                    numHourUsers.addYes();
-////                            numHU[0]++;
-//                }else if(thisPosition<0){
-//                    numHourUsers.addNo();
-////                            numHU[1]++;
-//                }else{
-//                    numHourUsers.addOther();
-////                            numHU[2]++;
-//                }
-                if(!((cd.getTime().getTime() - users.get(tweet.getUser().getId()).getLastTimeTweet().getTime()) < DAY_MILLIS)){
-                    //L'utente non ha twittato nell'ultimo giorno
-                    positionCounterUpdate(numDayUsers,thisPosition);
-//                    if(thisPosition>0){
-//                        numDayUsers.addYes();
-////                                numDU[0]++;
-//                    }else if(thisPosition<0){
-//                        numDayUsers.addNo();
-////                                numDU[1]++;
-//                    }else{
-//                        numDayUsers.addOther();
-////                                numDU[2]++;
-//                    }
-                    if(!((cw.getTime().getTime() - users.get(tweet.getUser().getId()).getLastTimeTweet().getTime()) < WEEK_MILLIS)){
-                        //L'utente non ha twittato nell'ultima settimana
-                        positionCounterUpdate(numWeekUsers,thisPosition);
-//                        if(thisPosition>0){
-//                            numWeekUsers.addYes();
-////                                    numWU[0]++;
-//                        }else if(thisPosition<0){
-//                            numWeekUsers.addNo();
-////                                    numWU[1]++;
-//                        }else{
-//                            numWeekUsers.addOther();
-////                                    numWU[2]++;
-//                        }
-                    }
-                }
-            }
-        }else{
-            if(thisPosition>0){
-                numHourTweets.addYes();
-                numDayUsers.addYes();
-                numWeekUsers.addYes();
-//                        numHU[0]++;
-//                        numDU[0]++;
-//                        numWU[0]++;
-            }else if(thisPosition<0){
-                numHourTweets.addNo();
-                numDayUsers.addNo();
-                numWeekUsers.addNo();
-//                        numHU[1]++;
-//                        numDU[1]++;
-//                        numWU[1]++;
-            }else{
-                numHourTweets.addOther();
-                numDayUsers.addOther();
-                numWeekUsers.addOther();
-//                        numHU[2]++;
-//                        numDU[2]++;
-//                        numWU[2]++;
-            }
-        }
-
-        addUser(tweet);
-
-//                System.out.println("[numWU] - [0]: "+numWU[0]+" [1]: "+numWU[1]+" [2]: "+numWU[2]);
+    public void checkCalendersLimit(TWST tweet, boolean post){
         //HOUR
         if(tweet.getCreatedAt().compareTo(ch.getTime()) > 0){
+//                    System.out.println("INH");
             statistics.add(new UsersStats(ch.getTime(),getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
-
             statisticsHour.add(new UsersStats(ch.getTime(),numHourUsers.getYes(),numHourUsers.getNo(),numHourUsers.getOther()));
+//                    System.out.println("[*][numHT] - [YES]: "+numHourTweets.getYes()+" [NO]: "+numHourTweets.getNo()+" [OTHER]: "+numHourTweets.getOther());
             hourTweets.add(new TweetsStats(ch.getTime(),numHourTweets.getYes(),numHourTweets.getNo(),numHourTweets.getOther()));
-
-//                    statisticsHour.add(new UsersStats(ch.getTime(),numHU[0],numHU[1],numHU[2]));
-//                    hourTweets.add(new TweetsStats(ch.getTime(),numHT[0],numHT[1],numHT[2]));
+//                    System.out.println("[**][numHT] - [YES]: "+numHourTweets.getYes()+" [NO]: "+numHourTweets.getNo()+" [OTHER]: "+numHourTweets.getOther());
             numHourTweets.clearAll();
             numHourUsers.clearAll();
-//                    numHT[0] = numHT[1] = numHT[2] = (long)0;
-//                    numHU[0] = numHU[1] = numHU[2] = (long)0;
             ch.add(Calendar.HOUR_OF_DAY,1);
             clastH.setTime(ch.getTime());
+            if(post){
+                post("hour");
+                //post("hourtweets");
+                //post("hourusers");
+            }
         }
         //DAY
         if(tweet.getCreatedAt().compareTo(cd.getTime()) > 0){
+//                    System.out.println("IND");
             statisticsDay.add(new UsersStats(cd.getTime(),numDayUsers.getYes(),numDayUsers.getNo(),numDayUsers.getOther()));
             numDayUsers.clearAll();
-//                    numDU[0] = numDU[1] = numDU[2] = (long) 0;
             cd.add(Calendar.DAY_OF_YEAR,1);
             clastD.setTime(cd.getTime());
+            if(post) {
+                post("dayusers");
+            }
         }
         //WEEK
         if(tweet.getCreatedAt().compareTo(cw.getTime()) > 0){
+//                    System.out.println("INW");
             System.out.println("[CREATEDAT] " + tweet.getCreatedAt());
-            System.out.println("[*][numWU] - [0]: "+numWeekUsers.getYes()+" [1]: "+numWeekUsers.getNo()+" [2]: "+numWeekUsers.getOther());
+            System.out.println("[*][numWU] - [YES]: "+numWeekUsers.getYes()+" [NO]: "+numWeekUsers.getNo()+" [OTHER]: "+numWeekUsers.getOther());
             statisticsWeek.add(new UsersStats(cw.getTime(),numWeekUsers.getYes(),numWeekUsers.getNo(),numWeekUsers.getOther()));
             numWeekUsers.clearAll();
-//                    numWU[0] = numWU[1] = numWU[2] = (long) 0;
-            System.out.println("[**][numWU] - [0]: "+numWeekUsers.getYes()+" [1]: "+numWeekUsers.getNo()+" [2]: "+numWeekUsers.getOther());
+            System.out.println("[**][numWU] - [YES]: "+numWeekUsers.getYes()+" [NO]: "+numWeekUsers.getNo()+" [OTHER]: "+numWeekUsers.getOther());
             System.out.println("[CW] " + cw.getTime());
             cw.add(Calendar.WEEK_OF_YEAR,1);
             System.out.println("[CW] " + cw.getTime());
@@ -716,20 +514,182 @@ public class TweetStreamHandler {
             clastW.setTime(cw.getTime());
             System.out.println("[CLASTW] " + clastW.getTime());
         }
-
-        n++;
-        if(n%1000==0){
-            System.out.println(n + " : " + tweet.getCreatedAt() + " : " + cw.getTime());
-        }
     }
 
-    public void loadJSON(boolean loadDB){
+
+
+    public void loadAllFromDB(boolean first, boolean close){
+        //Fisso una data di partenza per la lettura dei file (necessaria per la sincronizzazione DB locale/server
+        dateStart.set(2016,01,01);
+        int n = 0;
+        Integer thisPosition;
         clearAllCollections();
-        boolean first = true;
+
+//        db.getCollection("tweets").find();
+//        ObjectMapper mapper = new ObjectMapper();
+        DBCollection collectionTweets = db.getCollection("tweets");
+
+        JacksonDBCollection<TWST,Long> coll = JacksonDBCollection.wrap(collectionTweets,TWST.class,Long.class);
+
+//        DBObject statusJson;
+        TWST status;
+//        System.out.println("Collection tweets selected successfully");
+//        List<BlogPost> posts = coll.find().sort(DBSort.desc("date")).toArray();
+        System.out.println("Start sorting.");
+        DBCursor<TWST> cursor = coll.find().sort(DBSort.asc(("_id")));
+        System.out.println("Sorted.");
+        System.out.println("Cursor count: "+cursor.count());
+
+        while (cursor.hasNext()) {
+//            statusJson = cursor.next();
+            status = cursor.next();
+            if(status.getCreatedAt().compareTo(dateStart.getTime())<0){
+                continue;
+            }
+
+            if(first){
+                loadingFirstStatus(status);
+                first=false;
+            }
+            thisPosition = scanTweet(status);
+
+            addUser(status);
+
+            //Conta le posizioni per la collezione in oggetto
+            positionCounterUpdate(numHourTweets,thisPosition);
+
+            saveHashtags(status,thisPosition);
+            saveMentions(status,thisPosition);
+
+            updateUserCounters(status, thisPosition);
+
+            if(debug_print){
+                System.out.println("[ID] "+status.getID() + " [UID] " + status.getUser().getID() + " [CAT] " + status.getCreatedAt());
+                System.out.println("\t[POS] " + thisPosition);
+                System.out.println("\t[NHT] "+numHourTweets.toString());
+                System.out.println("\t[NHU] "+numHourUsers.toString());
+                System.out.println("\t[NDU] "+numDayUsers.toString());
+                System.out.println("\t[NWU] "+numWeekUsers.toString());
+            }
+
+            //Aggiorno la data dell'ultimo tweet dell'utente
+            users.get(status.getUser().getID()).setLastTimeTweet(status.getCreatedAt());
+
+            checkCalendersLimit(status,false);
+            n++;
+            if(n%1000==0){
+                System.out.println(n + " : " + status.getCreatedAt() + " : " + cw.getTime());
+            }
+        }
+        if(close){
+            closeStatusLoading();
+        }
+        System.out.println("All data ("+n+") successfully loaded from DB...");
+
+        toJSONstatistics();
+
+        System.out.println("...and exported!");
+
+        System.out.println("Loaded "+ getNumberOfTweets() + " tweets by " + users.size() + " users.");
+        users.values().stream()
+                .filter(u -> u.isPositionSetted())
+                .filter(u -> !u.isAmbiguous())
+                .collect(groupingBy(TWUS::isPoliticalPosition,counting()))
+                .entrySet().stream()
+                .map(e -> e.getKey() + " : " + e.getValue())
+                .forEach(System.out::println);
+    }
+
+    public void loadingFirstStatus(TWST firstStatus){
+        System.out.println("CLASTW: " + clastW.getTime().toString() + " / " + "FIRST: " + firstStatus.getCreatedAt().toString());
+        //Se sono state caricate le statistiche, sistemo il tempo, altrimenti no
+        if(clastW.getTimeInMillis()<firstStatus.getCreatedAt().getTime())
+        {
+            System.out.println("Data correction for Statistics");
+            if(firstStatus.getCreatedAt().getTime() - clastW.getTimeInMillis() < HOUR_MILLIS){
+                ch.setTime(clastW.getTime());
+            }else{
+                ch.setTime(firstStatus.getCreatedAt());
+            }
+
+            if(firstStatus.getCreatedAt().getTime() - clastW.getTimeInMillis() < DAY_MILLIS){
+                cd.setTime(clastW.getTime());
+            }else{
+                cd.setTime(firstStatus.getCreatedAt());
+            }
+
+            if(firstStatus.getCreatedAt().getTime() - clastW.getTimeInMillis() < WEEK_MILLIS){
+                cw.setTime(clastW.getTime());
+            }else{
+                cw.setTime(firstStatus.getCreatedAt());
+            }
+        }else{
+            ch.setTime(firstStatus.getCreatedAt());
+            cd.setTime(firstStatus.getCreatedAt());
+            cw.setTime(firstStatus.getCreatedAt());
+        }
+
+        //Aggiusto l'orario del limite per il salvataggio dei nuovi tweet
+        System.out.println("[CH] " + ch.getTime());
+        ch.set(Calendar.MINUTE,0);
+        ch.set(Calendar.SECOND,0);
+        ch.set(Calendar.MILLISECOND,0);
+        ch.add(Calendar.HOUR_OF_DAY,1);
+        System.out.println("[CH] " + ch.getTime());
+        System.out.println("[CD] " + cd.getTime());
+        cd.set(Calendar.HOUR_OF_DAY,0);
+        cd.set(Calendar.MINUTE,0);
+        cd.set(Calendar.SECOND,0);
+        cd.set(Calendar.MILLISECOND,0);
+        cd.add(Calendar.DAY_OF_YEAR,1);
+        System.out.println("[CD] " + cd.getTime());
+        System.out.println("[CW] " + cw.getTime());
+        cw.set(Calendar.DAY_OF_WEEK,Calendar.SUNDAY);
+        cw.set(Calendar.HOUR_OF_DAY,0);
+        cw.set(Calendar.MINUTE,0);
+        cw.set(Calendar.SECOND,0);
+        cw.set(Calendar.MILLISECOND,0);
+        cw.add(Calendar.DAY_OF_YEAR,1);
+//                    cw.add(Calendar.DAY_OF_YEAR,1);
+//                    cw.add(Calendar.WEEK_OF_YEAR,1);
+        System.out.println("[CW] " + cw.getTime());
+        System.out.println("CH: " + ch.getTime().toString() + " / " + "CD: " + cd.getTime().toString() + " / " + "CW: " + cw.getTime().toString());
+    }
+
+    public void closeStatusLoading(){
+        //Hour
+        statistics.add(new UsersStats(ch.getTime(),getNumberOfYesUsers(),getNumberOfNoUsers(),getNumberOfOtherUsers()));
+        statisticsHour.add(new UsersStats(ch.getTime(),numHourUsers.getYes(),numHourUsers.getNo(),numHourUsers.getOther()));
+        hourTweets.add(new TweetsStats(ch.getTime(),numHourTweets.getYes(),numHourTweets.getNo(),numHourTweets.getOther()));
+        ch.add(Calendar.HOUR_OF_DAY,1);
+        clastH.setTime(ch.getTime());
+        numHourTweets.clearAll();
+        numHourUsers.clearAll();
+        //Day
+        statisticsDay.add(new UsersStats(cd.getTime(),numDayUsers.getYes(),numDayUsers.getNo(),numDayUsers.getOther()));
+        cd.add(Calendar.DAY_OF_YEAR,1);
+        clastD.setTime(cd.getTime());
+        numDayUsers.clearAll();
+        //Week
+        statisticsWeek.add(new UsersStats(cw.getTime(),numWeekUsers.getYes(),numWeekUsers.getNo(),numWeekUsers.getOther()));
+        cw.add(Calendar.WEEK_OF_YEAR,1);
+        clastW.setTime(cw.getTime());
+        numWeekUsers.clearAll();
+    }
+
+    public void loadJSON(boolean loadDB,boolean cleanStart, boolean close, String path){
+        int n = 0;
+        TWST firstStatus;
+        TWST status;
+        clearAllCollections();
+        System.out.println("Starting loading files...");
+        boolean first = cleanStart;
+        //Fisso una data di partenza per la lettura dei file (necessaria per la sincronizzazione DB locale/server
+        dateStart.set(2016,01,01);
 
         try {
 
-            File[] files = new File("statuses").listFiles((dir,name) -> name.endsWith(".json"));
+            File[] files = new File(path).listFiles((dir,name) -> name.endsWith(".json"));
             /**********************************************/
             class Pair implements Comparable {
                 public long t;
@@ -758,18 +718,63 @@ public class TweetStreamHandler {
             for (int i = 0; i < files.length; i++)
                 files[i] = pairs[i].f;
             /***********************************************/
+            System.out.println("Files list completed. Starting scan files.");
             for (File file : files) {
+
+//                System.out.println(file.getName());
+
                 String rawJSON = readFirstLine(file);
                 if(rawJSON==null){
                     continue;
                 }
+
                 Status tweet = TwitterObjectFactory.createStatus(rawJSON);
 
-                loadSingleStatus(tweet,first,loadDB);
-                first = false;
+                if(tweet.getCreatedAt().compareTo(dateStart.getTime())<0){
+                    continue;
+                }
 
+                if(first){
+                    firstStatus = new TWST(tweet);
+                    loadingFirstStatus(firstStatus);
+                    first = false;
+                }
+
+                status = new TWST(tweet);
+
+                /*****************************/
+
+                Integer thisPosition;
+
+                if(loadDB){
+                    loadTweetOnMongoDB(status,db);
+                }
+
+                thisPosition = scanTweet(status);
+
+                addUser(status);
+
+                //Conta le posizioni per la collezione in oggetto
+                positionCounterUpdate(numHourTweets,thisPosition);
+                saveHashtags(status,thisPosition);
+                saveMentions(status,thisPosition);
+
+                updateUserCounters(status, thisPosition);
+
+                /********************************/
+                checkCalendersLimit(status,false);
+
+                n++;
+                if(n%1000==0){
+                    System.out.println(n + " : " + tweet.getCreatedAt() + " : " + cw.getTime());
+                }
             }
-            System.out.println("All data successfully loaded...");
+
+            if(close){
+                closeStatusLoading();
+            }
+
+            System.out.println("All data ("+n+") successfully loaded from \"" + path + "\"...");
 
             toJSONstatistics();
 
@@ -933,13 +938,10 @@ public class TweetStreamHandler {
         }
     }
 
+    /*********EXPORTING*********/
+
     private void saveStatusToJSON(Status status){
         try {
-//            new File("statuses").mkdir();
-//            String rawJSON = TwitterObjectFactory.getRawJSON(status);
-//            String fileName = "statuses/" + status.getId() + ".json";
-//            storeJSON(rawJSON, fileName);
-//            System.out.println(fileName + " - " + status.getText());
             new File("statuses").mkdir();
             String rawJSON = TwitterObjectFactory.getRawJSON(status);
             String fileName = "statuses/" + status.getId() + ".json";
@@ -950,7 +952,6 @@ public class TweetStreamHandler {
             System.out.println("Failed to store tweets: " + ioe.getMessage());
         }
     }
-
     private static void storeJSON(String rawJSON, String fileName) throws IOException {
         FileOutputStream fos = null;
         OutputStreamWriter osw = null;
@@ -982,7 +983,6 @@ public class TweetStreamHandler {
             }
         }
     }
-
     public void toJSONVotingIntentions(){
         try {
             Long y = statistics.getLast().getYesUsers();
@@ -1014,7 +1014,6 @@ public class TweetStreamHandler {
             e.printStackTrace();
         }
     }
-
     public void toJSONVotingIntentionsWAmbiguos(){
         try {
             Long y = statistics.getLast().getYesUsers();
@@ -1044,7 +1043,6 @@ public class TweetStreamHandler {
             e.printStackTrace();
         }
     }
-
     private int scanTweet(TWST tweet){
         String text = tweet.getText().toLowerCase();
         int res = 0;
@@ -1056,7 +1054,6 @@ public class TweetStreamHandler {
         }
         return res;
     }
-
     private Double numToPerc(Long yes, Long no, Long other, Integer mode){
         Double tot = (double) (yes+no+other);
         if(tot == 0.0){
@@ -1071,7 +1068,6 @@ public class TweetStreamHandler {
             }
         }
     }
-
     public void toJSONVotingTrend(String type){
         try {
 
@@ -1116,7 +1112,6 @@ public class TweetStreamHandler {
             e.printStackTrace();
         }
     }
-
     public void toJSONpopularitySum(){
         try {
             TweetsStats last;
@@ -1145,7 +1140,6 @@ public class TweetStreamHandler {
             e.printStackTrace();
         }
     }
-
     private boolean cleanLocation(Status t){
         if((t.getUser().getLocation() != null)&&(!(t.getUser().getLocation().equalsIgnoreCase("italy") || t.getUser().getLocation().equalsIgnoreCase("italia") || t.getUser().getLocation().equalsIgnoreCase("italia") || t.getUser().getLocation().equalsIgnoreCase("Italy-World")))){
             return true;
@@ -1252,7 +1246,6 @@ public class TweetStreamHandler {
             e.printStackTrace();
         }
     }
-
     public void toJSONentity(String type,String mode){
         try {
             EntityStats last;
@@ -1308,7 +1301,6 @@ public class TweetStreamHandler {
             e.printStackTrace();
         }
     }
-
     public void exportAllJSON(){
         this.toJSONVotingIntentions();
         this.toJSONVotingIntentionsWAmbiguos();
@@ -1326,7 +1318,6 @@ public class TweetStreamHandler {
         this.toJSONentity("mentions","No");
         toJSONstatistics();
     }
-
     public String toStringVotingIntentions(){
         String rawJSON = "";
         try {
@@ -1345,7 +1336,6 @@ public class TweetStreamHandler {
         }
         return rawJSON;
     }
-
     public String toStringVotingHourTrend(){
         String rawJSON = "";
         try {
@@ -1355,7 +1345,6 @@ public class TweetStreamHandler {
         }
         return rawJSON;
     }
-
     public String toStringVotingDayTrend(){
         String rawJSON = "";
         try {
@@ -1401,6 +1390,9 @@ public class TweetStreamHandler {
         }
         return rawJSON;
     }
+
+
+    /*********POSTING*********/
 
     private String postHourTweets(){
         StringBuilder status = new StringBuilder("");
@@ -1456,26 +1448,34 @@ public class TweetStreamHandler {
     }
 
     private String postHourUsers(){
+        Double yp = numToPerc(statisticsHour.getLast().getYesUsers(),statisticsHour.getLast().getNoUsers(),statisticsHour.getLast().getOtherUsers(),1);
+        Double np = 1-yp;
+        yp = yp*100;
+        np = np*100;
         StringBuilder status = new StringBuilder("");
-        status.append("Nell'ultima ora hanno twittato ").append(statisticsHour.getLast().getTotUsers()).append(" utenti, di cui ");
+        status.append("Nell'ultima ora hanno twittato ").append(statisticsHour.getLast().getTotUsers()).append(" utenti. [");
         if(statisticsHour.getLast().getNoUsers()>statisticsHour.getLast().getYesUsers()){
-            status.append(statisticsHour.getLast().getNoUsers()).append(" per il NO e ").append(statisticsHour.getLast().getYesUsers()).append(" per il SI");
+            status.append(String.format(Locale.US,"%1$.2f",np)).append("% NO e ").append(String.format(Locale.US,"%1$.2f",yp)).append("% SI");
         }else{
-            status.append(statisticsHour.getLast().getYesUsers()).append(" per il SI e ").append(statisticsHour.getLast().getNoUsers()).append(" per il NO");
+            status.append(String.format(Locale.US,"%1$.2f",yp)).append("% SI e ").append(String.format(Locale.US,"%1$.2f",np)).append("% NO");
         }
-        status.append(" #ReferendumCostituzionale ").append("http://www.suffragium.it/");
+        status.append("] #ReferendumCostituzionale ").append("http://www.suffragium.it/");
         return status.toString();
     }
 
     private String postDayUsers(){
+        Double yp = numToPerc(statisticsDay.getLast().getYesUsers(),statisticsDay.getLast().getNoUsers(),(long) 0,1);
+        Double np = 1 - yp;
+        yp = yp*100;
+        np = np*100;
         StringBuilder status = new StringBuilder("");
-        status.append("Oggi hanno twittato ").append(statisticsDay.getLast().getTotUsers()).append(" utenti, di cui");
+        status.append("Oggi hanno twittato ").append(statisticsDay.getLast().getTotUsers()).append(" utenti. [ ");
         if(statisticsDay.getLast().getNoUsers()>statisticsDay.getLast().getYesUsers()){
-            status.append(statisticsDay.getLast().getNoUsers()).append(" per il NO e ").append(statisticsDay.getLast().getYesUsers()).append(" per il SI");
+            status.append(String.format(Locale.US,"%1$.2f",np)).append("% NO e ").append(String.format(Locale.US,"%1$.2f",yp)).append("% SI");
         }else{
-            status.append(statisticsDay.getLast().getYesUsers()).append(" per il SI e ").append(statisticsDay.getLast().getNoUsers()).append(" per il NO");
+            status.append(String.format(Locale.US,"%1$.2f",yp)).append("% SI e ").append(String.format(Locale.US,"%1$.2f",np)).append("% NO");
         }
-        status.append(" #ReferendumCostituzionale ").append("http://www.suffragium.it/");
+        status.append("] #ReferendumCostituzionale ").append("http://www.suffragium.it/");
         return status.toString();
     }
 

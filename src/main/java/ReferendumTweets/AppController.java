@@ -28,6 +28,8 @@ public class AppController {
 
     PropertiesManager props = new PropertiesManager();
     String keyServer = null;
+    Boolean hour = true;
+    Boolean mention = true;
 
     public static void main(String[] args) throws Exception {
         SpringApplication.run(AppController.class, args);
@@ -48,12 +50,21 @@ public class AppController {
 //            System.out.println("***** Starting exporting data at " + System.currentTimeMillis() + " *****");
 //            tsh.exportAllJSON();
 //            System.out.println("***** Exported data at " + System.currentTimeMillis() + " *****");
+            if(!tsh.getStatusLock()){
+                if(hour){
+                    tsh.post("hourtweets");
+                    hour = false;
+                }else{
+                    tsh.post("hourusers");
+                    hour = true;
+                }
+            }
         }
     };
     private TimerTask absoluteTask = new TimerTask() {
         @Override
         public void run () {
-            if(!tsh.post_block){
+            if(!tsh.getStatusLock()){
                 tsh.post("absoluteusersperc");
             }
         }
@@ -61,8 +72,25 @@ public class AppController {
     private TimerTask generalInfoTask = new TimerTask() {
         @Override
         public void run () {
-            if(!tsh.post_block){
+            if(!tsh.getStatusLock()){
                 tsh.post("globalinfo");
+            }
+        }
+    };
+
+    private TimerTask entityTask = new TimerTask() {
+        @Override
+        public void run () {
+            if(!tsh.getStatusLock()){
+                if(mention){
+                    tsh.post("postMentionsSI");
+                    tsh.post("postMentionsNO");
+                    hour = false;
+                }else{
+                    tsh.post("postHashtagsSI");
+                    tsh.post("postHashtagsNO");
+                    hour = true;
+                }
             }
         }
     };
@@ -70,16 +98,23 @@ public class AppController {
     private void init(){
         try {
             tsh = new TweetStreamHandler();
-//            tsh.loadAllFromDB();
+
+            tsh.loadAllFromDB(true,true);
 //            tsh.loadStatistics();
-//            tsh.loadJSON(true);
+//            tsh.loadJSON(true,true,false,"statuses\\75");
+//            tsh.loadJSON(true,false,false,"statuses\\76");
+//            tsh.loadJSON(true,false,false,"statuses\\77");
+//            tsh.loadJSON(true,false,false,"statuses\\78");
+//            tsh.loadJSON(true,false,false,"statuses\\79");
+//            tsh.loadJSON(true,false,true,"statuses\\80");
 //            tsh.exportAllJSON();
 //            tsh.startStream("#iovotono","#bastaunsi","#iovotosi","#italiachedicesi","#referendumcostituzionale");
 //            tsh.loadStatistics();
 //            System.out.println("Starting TIMER");
 //            timer.schedule(hourlyTask, 0, 1000*60*60);
-//            timer.schedule(absoluteTask, 1000*60*5,1000*60*60*8);
-//            timer.schedule(generalInfoTask, 1000*60*30,1000*60*60*12);
+//            timer.schedule(absoluteTask, 1000*60*5,1000*60*60*4);
+//            timer.schedule(entityTask, 1000*60*15,1000*60*60*6);
+//            timer.schedule(generalInfoTask, 1000*60*30,1000*60*60*8);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -123,13 +158,13 @@ public class AppController {
                 status = 0;
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
             }else if(name.equalsIgnoreCase("loadfiles") && status == 0){
-                tsh.loadJSON(false);
+                tsh.loadJSON(false,true,false,"statuses");
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
             }else if(name.equalsIgnoreCase("loadfilesDB") && status == 0){
-                tsh.loadJSON(true);
+                tsh.loadJSON(true,true,false,"statuses");
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
             }else if(name.equalsIgnoreCase("loadFromDB") && status == 0){
-                tsh.loadAllFromDB();
+                tsh.loadAllFromDB(true,true);
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
             }else if(name.equalsIgnoreCase("loadstat") && status == 0){
                 tsh.loadStatistics();
@@ -141,15 +176,15 @@ public class AppController {
                 tsh.exportAllJSON();
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Stopped);
             }else if(name.equalsIgnoreCase("postabusp")){
-                if(!tsh.post_block){
+                if(!tsh.getStatusLock()){
                     tsh.post("absoluteusersperc");
                 }
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),thisState());
             }else if(name.equalsIgnoreCase("block_post")){
-                tsh.post_block = false;
+                tsh.changeStatusLock(true);
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),thisState());
             }else if(name.equalsIgnoreCase("let_post")){
-                tsh.post_block = true;
+                tsh.changeStatusLock(false);
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),thisState());
             }else{
                 return new RestMessage(status,tsh.getNumberOfTweets(),tsh.getNumberOfUsers(),State.Unknown);

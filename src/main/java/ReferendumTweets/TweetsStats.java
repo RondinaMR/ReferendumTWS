@@ -64,4 +64,14 @@ public class TweetsStats {
         this.no += noT;
         this.other += otherT;
     }
+
+    @Override
+    public String toString() {
+        return "TweetsStats{" +
+                "date=" + date +
+                ", yes=" + yes +
+                ", no=" + no +
+                ", other=" + other +
+                '}';
+    }
 }

@@ -1,23 +1,26 @@
 package ReferendumTweets;
 
+import java.util.LinkedHashSet;
+
 /**
  * Created by marco on 26/11/2016.
  */
 public class TmpStats {
-    Long yes;
-    Long no;
-    Long other;
+    private Long yes;
+    private Long no;
+    private Long other;
+    private LinkedHashSet<Long> users;
 
     public TmpStats() {
-        clearYes();
-        clearNo();
-        clearOther();
+        users = new LinkedHashSet<>();
+        clearAll();
     }
 
     public TmpStats(Long yes, Long no, Long other) {
         this.yes = yes;
         this.no = no;
         this.other = other;
+        users = new LinkedHashSet<>();
     }
     /*************************/
     public Long getYes() {
@@ -72,5 +75,21 @@ public class TmpStats {
         clearYes();
         clearNo();
         clearOther();
+        clearUsers();
+    }
+
+    /***************************/
+    public boolean containUser(Long id){return users.contains(id);}
+    public void addUser(Long id){if(!users.contains(id)){users.add(id);}}
+    public void clearUsers(){users.clear();}
+    /***************************/
+
+    @Override
+    public String toString() {
+        return "TmpStats{" +
+                "yes=" + yes +
+                ", no=" + no +
+                ", other=" + other +
+                '}';
     }
 }
