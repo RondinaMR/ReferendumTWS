@@ -90,39 +90,6 @@ public class TWUS {
         this.lastTweet = cal.getTime();
     }
 
-
-//    public TWUS(long userID, String screenName, String name, String location) {
-////        this.screenName = screenName;
-////        this.name = name;
-//        this.userID = userID;
-//        this.location = location;
-//    }
-//
-//    public TWUS(long userID, String screenName, String name, String location, boolean politicalPosition) {
-////        this.screenName = screenName;
-////        this.name = name;
-//        this.userID = userID;
-//        this.location = location;
-//        this.politicalPosition = politicalPosition;
-//        this.positionSetted = true;
-//    }
-
-//    public String getScreenName(){
-//        return screenName;
-//    }
-//
-//    public void setScreenName(String screenName) {
-//        this.screenName = screenName;
-//    }
-//
-//    public String getName() {
-//        return name;
-//    }
-//
-//    public void setName(String name) {
-//        this.name = name;
-//    }
-
     public long getID() {
         return userID;
     }

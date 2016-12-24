@@ -22,6 +22,8 @@ public class UsersStats {
     public UsersStats() {
     }
 
+    /**********DATE**********/
+
     public Date getDate() {
         return date;
     }
@@ -30,41 +32,43 @@ public class UsersStats {
         this.date = date;
     }
 
+    /**********YES**********/
+
     public Long getYesUsers() {
         return yesUsers;
     }
-
     public void setYesUsers(Long yesUsers) {
         this.yesUsers = yesUsers;
     }
-
     public void addYesUsers(Long yesUsers){
         this.yesUsers += yesUsers;
     }
 
+    /**********NO**********/
+
     public Long getNoUsers() {
         return noUsers;
     }
-
     public void setNoUsers(Long noUsers) {
         this.noUsers = noUsers;
     }
-
     public void addNoUsers(Long NoUsers){
         this.noUsers += noUsers;
     }
 
+    /**********OTHER**********/
+
     public Long getOtherUsers() {
         return otherUsers;
     }
-
     public void setOtherUsers(Long otherUsers) {
         this.otherUsers = otherUsers;
     }
-
     public void addOtherUsers(Long otherUsers){
         this.otherUsers += otherUsers;
     }
+
+    /**********TOT**********/
 
     public Long getTotUsers(){ return this.noUsers + this.yesUsers + this.otherUsers;}
 

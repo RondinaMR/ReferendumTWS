@@ -73,49 +73,5 @@ public class PropertiesManager {
         }else{
             return null;
         }
-        /*String result = "";
-        InputStream inputStream = null;
-        String OAuthConsumerKey,OAuthConsumerSecret,OAuthAccessToken,OAuthAccessTokenSecret;
-        OAuthConsumerKey = new String("");
-        OAuthConsumerSecret = new String("");
-        OAuthAccessToken = new String("");
-        OAuthAccessTokenSecret = new String("");
-        try {
-            Properties prop = new Properties();
-            String propFileName = "/resources/config.properties";
-
-            inputStream = PropertiesManager.class.getResourceAsStream(propFileName);
-
-            if (inputStream != null) {
-                prop.load(inputStream);
-            } else {
-                throw new FileNotFoundException("property file '" + propFileName + "' not found in the classpath");
-            }
-
-            // get the property value
-            OAuthConsumerKey = prop.getProperty("OAuthConsumerKey");
-            OAuthConsumerSecret = prop.getProperty("OAuthConsumerSecret");
-            OAuthAccessToken = prop.getProperty("OAuthAccessToken");
-            OAuthAccessTokenSecret = prop.getProperty("OAuthAccessTokenSecret");
-
-        } catch (Exception e) {
-            System.out.println("Exception: " + e);
-        } finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-        }
-
-        if(name.equals("OAuthConsumerKey")){
-            return OAuthConsumerKey;
-        }else if(name.equals("OAuthConsumerSecret")){
-            return OAuthConsumerSecret;
-        }else if(name.equals("OAuthAccessToken")){
-            return OAuthAccessToken;
-        }else if(name.equals("OAuthAccessTokenSecret")){
-            return OAuthAccessTokenSecret;
-        }else{
-            return new String("ERROR");
-        }*/
     }
 }

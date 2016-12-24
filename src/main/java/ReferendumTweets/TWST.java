@@ -100,10 +100,6 @@ public class TWST {
         this.id = ID;
     }
 
-//    public Long getUserID() {
-//        return user.getUserID();
-//    }
-
 
     public TWUS getUser() {
         return user;

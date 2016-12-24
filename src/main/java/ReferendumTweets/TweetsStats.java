@@ -23,48 +23,44 @@ public class TweetsStats {
         this.other = other;
     }
 
+    /**********DATE**********/
     public Date getDate() {
         return date;
     }
-
     public void setDate(Date date) {
         this.date = date;
     }
-
+    /**********YES**********/
     public Long getYes() {
         return yes;
     }
-
     public void setYes(Long yes) {
         this.yes = yes;
     }
-
+    /**********NO**********/
     public Long getNo() {
         return no;
     }
-
     public void setNo(Long no) {
         this.no = no;
     }
-
+    /**********OTHER**********/
     public Long getOther() {
         return other;
     }
-
     public void setOther(Long other) {
         this.other = other;
     }
-
+    /**********COMMON**********/
     public Long numberOfTweets() {
         return yes + no + other;
     }
-
     public void addYesNoOtherTU(Long yesT, Long noT, Long otherT) {
         this.yes += yesT;
         this.no += noT;
         this.other += otherT;
     }
-
+    /**********VARIOUS**********/
     @Override
     public String toString() {
         return "TweetsStats{" +
